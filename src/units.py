@@ -38,10 +38,11 @@ class Unit:
         self.Dead = False
         self.Hits = 0
 
-    def attack(self, unit: 'Unit'):
-        unit.CurrentHP -= self.dmg
+    def attack(self, unit: 'Unit', dmg=None):
+        unit.CurrentHP -= choose(dmg, self.dmg)
         unit.Dead = unit.CurrentHP <= 0
         unit.Hits += 1
+        return -unit.CurrentHP  # remaining dmg
 
 
 # Own Units

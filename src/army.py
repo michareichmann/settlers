@@ -74,8 +74,7 @@ class Battalion:
                 dmg = unit.dmg
                 while dmg > 0:
                     enemy = battalion.next
-                    dmg -= enemy.CurrentHP
-                    enemy.kill()
+                    dmg = unit.attack(enemy, dmg)  # returns remaining dmg
             except StopIteration:
                 return dmg
         return dmg

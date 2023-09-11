@@ -175,7 +175,7 @@ class OwnArmy(Army):
 
 
 class EnemyArmy(Army):
-    Units = [Scavenger, Thug, GuardDog, Stonethrower, Ranger]
+    Units = [Scavenger, Thug, GuardDog, Roughneck, Stonethrower, Ranger]
 
-    def __init__(self, scavengers=0, thugs=0, guard_dogs=0, stonethrowers=0, ranger=0):
-        super().__init__(scavengers, thugs, guard_dogs, stonethrowers, ranger)
+    def __init__(self, scavengers=0, thugs=0, guard_dogs=0, roughnecks=0, stonethrowers=0, ranger=0):
+        super().__init__(scavengers, thugs, guard_dogs, roughnecks, stonethrowers, ranger)

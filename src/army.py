@@ -164,10 +164,11 @@ class Army:
         while not self.defeated and not army.defeated:
             if Verbose:
                 print_banner(f'ROUND {n}', color='yellow')
-            for speed in range(2, -1, -1):
-                if Verbose:
-                    print_small_banner(f'{SpeedDict[speed]} units', color='yellow')
-                self._attack(army, speed)  # fast units
+            for speed in [2, 1, 0]:
+                if self.has_speed_units(speed) or army.has_speed_units(speed):
+                    if Verbose:
+                        print_small_banner(f'{SpeedDict[speed]} units', color='yellow')
+                    self._attack(army, speed)  # fast units
             n += 1
         if Verbose:
             print_banner(f'End after {n} round{"s" if n > 1 else ""}', color='red')
@@ -175,10 +176,10 @@ class Army:
 
 
 class OwnArmy(Army):
-    Units = [Recruit, Militia, Soldier, Bowman, LongBowman, Cavalry, General]
+    Units = [Recruit, Militia, Soldier, Cavalry, Bowman, LongBowman, General]
 
-    def __init__(self, recruits=0, militia=0, soldiers=0, bowmen=0, longbowmen=0, cavalry=0):
-        super().__init__(recruits, militia, soldiers, bowmen, longbowmen, cavalry, 1)
+    def __init__(self, recruits=0, militia=0, soldiers=0, cavalry=0, bowmen=0, longbowmen=0):
+        super().__init__(recruits, militia, soldiers, cavalry, bowmen, longbowmen, 1)
 
 
 class EnemyArmy(Army):

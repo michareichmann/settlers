@@ -111,6 +111,7 @@ class Army:
         self.Batallions.append(other)
         self.N += 1
         self.IHP = self.hp_indices()
+        self.Speeds = np.append(self.Speeds, other.Unit.Speed)
         return self
 
     def __repr__(self):
@@ -152,7 +153,7 @@ class Army:
                 dmg = bat.attack(army[i])
             bat.NAttacks = 0
         self.HasAttacked[speed] = True
-        if not army.HasAttacked[speed]:
+        if not army.HasAttacked[speed] and army.has_speed_units(speed):
             info('Enemy attacking!', color='red', prnt=Verbose)
             army._attack(self, speed)
         self.update_n_defeated()

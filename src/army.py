@@ -41,8 +41,12 @@ class Battalion:
         return self.NAttacks + self.NDefeated < self.N
 
     @property
-    def defeated(self):
+    def dead(self):
         return self.Units[-1].Dead
+
+    @property
+    def alive(self):
+        return not self.dead
 
     @property
     def next(self):
@@ -93,15 +97,12 @@ class Army:
     def __init__(self, *n_units):
 
         self.Batallions = [Battalion(n, u) for n, u in zip(n_units, self.Units) if n]
+        self.Speeds = np.array([bat.Unit.Speed for bat in self])
         self.N = len(self.Batallions)
         self.NUnits = np.sum(bat.N for bat in self)
-        self.IHP = self.get_hp_indices()  # indices sorted by HP
+        self.IHP = self.hp_indices()  # indices sorted by HP
 
         self.HasAttacked = [False, False, False]
-
-    def get_hp_indices(self):
-        hp = [bat.Unit.HP for bat in self]
-        return np.append(np.argsort(hp[:-1]), self.N - 1) if self[-1].Unit.Name == 'General' else np.argsort(hp)
 
     def __getitem__(self, item):
         return self.Batallions[item]
@@ -109,16 +110,27 @@ class Army:
     def __add__(self, other: Battalion):
         self.Batallions.append(other)
         self.N += 1
-        self.IHP = self.get_hp_indices()
+        self.IHP = self.hp_indices()
         return self
 
     def __repr__(self):
         bat_str = '  '.join([f'{bat!r}' for bat in self.Batallions])
         return f'{self.__class__.__name__}:\n  {bat_str}'
 
+    def hp_indices(self):
+        hp = [bat.Unit.HP for bat in self]
+        return np.append(np.argsort(hp[:-1]), self.N - 1) if self[-1].Unit.Name == 'General' else np.argsort(hp)
+
     @property
     def size(self):
         return np.sum([bat.n_alive for bat in self if bat.Unit.Name != 'General'])
+
+    def has_speed_units(self, speed):
+        return any(self[i].alive for i in np.where(self.Speeds == speed)[0])
+
+    @property
+    def defeated(self):
+        return np.all([bat.dead for bat in self])
 
     def revive(self):
         for bat in self:
@@ -131,15 +143,11 @@ class Army:
         for bat in self:
             bat.update_n_defeated()
 
-    @property
-    def defeated(self):
-        return np.all([bat.defeated for bat in self])
-
     def _attack(self, army: 'Army', speed):
         for bat in self.speed_batallions(speed):
             dmg = 1
             for i in army.IHP if speed == 2 else range(army.N):
-                if not bat.can_attack or army[i].defeated or dmg <= 0:
+                if not bat.can_attack or army[i].dead or dmg <= 0:
                     continue
                 dmg = bat.attack(army[i])
             bat.NAttacks = 0

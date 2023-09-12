@@ -6,29 +6,32 @@ from utils.classes import PBAR
 
 d = SaveDraw()
 
+recruits = OwnArmy(150)
+
 
 # me = OwnArmy(80, 11, 0, 0, 50, 59)
-# me = OwnArmy(150, 0, 0, 10, 50, 0)
-me = OwnArmy(111, 0, 0, 0, 0, 89)
+me = OwnArmy(40, 0, 0, 50, 0, 110)
 # enemy = EnemyArmy(0, 180, 20, 0, 0)
-# enemy = EnemyArmy(0, 180, 20, 0, 149) + MetalTooth
-enemy = EnemyArmy(15, 0, 0, 0, 0)
+enemy = EnemyArmy(0, 0, 0, 50, 0, 149) + MetalTooth
 
 
-def sim(n=100, r=False, show=True):
-    PBAR.start(n)
+def sim(*armies, n=1000, r=False, show=True):
     losses = []
     rounds = []
+    armies = armies if len(armies) else [me]
+    PBAR.start(n * len(armies))
     for _ in range(n):
-        me.revive()
         enemy.revive()
-        rounds.append(me.attack(enemy))
-        losses.append(me[0].NDefeated)
-        PBAR.update()
+        for army in armies:
+            army.revive()
+            army.attack(enemy)
+            PBAR.update()
+        rounds.append(armies[-1].NRounds)
+        losses.append(sum(army[0].NDefeated for army in armies))
     a = None
     if np.any(losses):
-        a = d.distribution(np.array(losses), w=1, q=.002, rf=1, lf=1, normalise=True, gridy=True, show=show and not r, x_tit=f'Lost {me[0].Unit.Name}s')
-        info(f'{me[0].Unit.Name} losses: ')
+        a = d.distribution(np.array(losses), w=1, q=.002, rf=1, lf=1, normalise=True, gridy=True, show=show and not r, x_tit=f'Lost {armies[-1][0].Unit.Name}s')
+        info(f'{armies[-1][0].Unit.Name} losses: ')
         for x, y in zip(*hist_xy(a, raw=True)):
             if y > 0.005:
                 print(f'  {x:.0f}: {y:4.1%}')
@@ -42,11 +45,13 @@ def sim(n=100, r=False, show=True):
     return b if r else a
 
 
-def print_attack():
+def print_attack(*armies):
     old_verbose = set_verbose(ON)
-    me.revive()
+    armies = armies if len(armies) else [me]
     enemy.revive()
-    me.attack(enemy)
+    for army in armies:
+        army.revive()
+        army.attack(enemy)
     set_verbose(old_verbose)
 
 

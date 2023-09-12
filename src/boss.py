@@ -10,7 +10,11 @@ class Boss(Battalion):
         self.Unit = self[0]
 
     def __repr__(self):
-        return f'Boss {self.Name} with {self.Unit.CurrentHP}/{self.Unit.HP} HP\n'
+        return f'Boss {self.Name} ({self.alive})\n'
+
+    @property
+    def alive_str(self):
+        return f'{self.Unit.CurrentHP}/{self.Unit.HP} HP'
 
 
 Skunk = Boss('Skunk', 5000, 1, 100, .5, 0)

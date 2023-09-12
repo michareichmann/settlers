@@ -23,14 +23,20 @@ class Battalion:
         self.Unit = unit
         self.Units = [deepcopy(unit) for _ in range(n)]
         self.HP = np.sum([unit.HP for unit in self])
+
         self.NAttacks = 0
         self.NDefeated = 0
+        self.CurrentDmg = 1
 
     def __repr__(self):
-        return f'{self.Unit.Name} Batallion with {self.n_alive}/{self.N} units\n'
+        return f'{self.Unit.Name} Batallion ({self.alive_str})\n'
 
     def __getitem__(self, item):
         return self.Units[item]
+
+    @property
+    def alive_str(self):
+        return f'{self.n_alive}/{self.N}'
 
     @property
     def n_alive(self):
@@ -38,7 +44,7 @@ class Battalion:
 
     @property
     def can_attack(self):
-        return self.NAttacks + self.NDefeated < self.N
+        return self.NAttacks + self.NDefeated < self.N and self.CurrentDmg > 0
 
     @property
     def dead(self):
@@ -54,12 +60,14 @@ class Battalion:
 
     def update_n_defeated(self):
         self.NDefeated = self.N - self.n_alive
+        self.CurrentDmg = 1
 
     def revive(self):
         for unit in self.Units:
             unit.revive()
         self.NAttacks = 0
         self.NDefeated = 0
+        self.CurrentDmg = 1
 
     def normal_attack(self, battalion: 'Battalion'):
         for unit in self.Units[self.NAttacks + self.NDefeated:]:
@@ -67,28 +75,24 @@ class Battalion:
                 unit.attack(battalion.next)
                 self.NAttacks += 1
             except StopIteration:
-                pass
-        return 1
+                break
 
     def splash_attack(self, battalion: 'Battalion'):
-        dmg = 1
         for unit in self.Units[self.NAttacks + self.NDefeated:]:
-            dmg = 0
             try:
-                dmg = unit.dmg
-                while dmg > 0:
+                self.CurrentDmg = unit.dmg
+                while self.CurrentDmg > 0:
                     enemy = battalion.next
-                    dmg = unit.attack(enemy, dmg)  # returns remaining dmg
+                    self.CurrentDmg = unit.attack(enemy, self.CurrentDmg)  # returns remaining dmg
             except StopIteration:
-                return dmg
-        return dmg
+                break
 
     def attack(self, battalion: 'Battalion'):
-        info(f'attacking with {self.N - self.NAttacks - self.NDefeated} {self.Unit.Name}s', prnt=Verbose)
-        splash = np.random.random() < self.Unit.Splash
-        dmg = self.splash_attack(battalion) if splash else self.normal_attack(battalion)
-        info(battalion, prnt=Verbose)
-        return dmg
+        if battalion is not None:
+            n0, n1 = self.N - self.NAttacks - self.NDefeated, battalion.n_alive
+            splash = np.random.random() < self.Unit.Splash if 0 < self.Unit.Splash < 1 else self.Unit.Splash
+            self.splash_attack(battalion) if splash else self.normal_attack(battalion)
+            info(f'{n0} {self.Unit.Name} killed {n1 - battalion.n_alive} {battalion.Unit.Name} ({battalion.alive_str})', prnt=Verbose)
 
 
 class Army:
@@ -102,7 +106,7 @@ class Army:
         self.NUnits = np.sum(bat.N for bat in self)
         self.IHP = self.hp_indices()  # indices sorted by HP
 
-        self.HasAttacked = [False, False, False]
+        self.NRounds = 0
 
     def __getitem__(self, item):
         return self.Batallions[item]
@@ -113,6 +117,9 @@ class Army:
         self.IHP = self.hp_indices()
         self.Speeds = np.append(self.Speeds, other.Unit.Speed)
         return self
+
+    def __str__(self):
+        return self.__class__.__name__
 
     def __repr__(self):
         bat_str = '  '.join([f'{bat!r}' for bat in self.Batallions])
@@ -126,6 +133,9 @@ class Army:
     def size(self):
         return np.sum([bat.n_alive for bat in self if bat.Unit.Name != 'General'])
 
+    def indices(self, speed):
+        return [i for i in (self.IHP if speed == 2 else range(self.N)) if self[i].alive]
+
     def has_speed_units(self, speed):
         return any(self[i].alive for i in np.where(self.Speeds == speed)[0])
 
@@ -136,6 +146,7 @@ class Army:
     def revive(self):
         for bat in self:
             bat.revive()
+        self.NRounds = 0
 
     def speed_batallions(self, speed):
         return filter(lambda x: x.Unit.Speed == speed, self.Batallions)
@@ -146,34 +157,24 @@ class Army:
 
     def _attack(self, army: 'Army', speed):
         for bat in self.speed_batallions(speed):
-            dmg = 1
-            for i in army.IHP if speed == 2 else range(army.N):
-                if not bat.can_attack or army[i].dead or dmg <= 0:
-                    continue
-                dmg = bat.attack(army[i])
+            indices = iter(army.indices(speed))
+            while bat.can_attack and not army.defeated:
+                bat.attack(army[next(indices)])
             bat.NAttacks = 0
-        self.HasAttacked[speed] = True
-        if not army.HasAttacked[speed] and army.has_speed_units(speed):
-            info('Enemy attacking!', color='red', prnt=Verbose)
-            army._attack(self, speed)
-        self.update_n_defeated()
-        army.update_n_defeated()
-        self.HasAttacked[speed] = False
 
     def attack(self, army: 'Army'):
-        n = 0
         while not self.defeated and not army.defeated:
-            if Verbose:
-                print_banner(f'ROUND {n}', color='yellow')
-            for speed in [2, 1, 0]:
-                if self.has_speed_units(speed) or army.has_speed_units(speed):
-                    if Verbose:
-                        print_small_banner(f'{SpeedDict[speed]} units', color='yellow')
-                    self._attack(army, speed)  # fast units
-            n += 1
-        if Verbose:
-            print_banner(f'End after {n} round{"s" if n > 1 else ""}', color='red')
-        return n
+            print_banner(f'ROUND {self.NRounds}', color='yellow', prnt=Verbose)
+            for speed in [s for s in [2, 1, 0] if self.has_speed_units(s) or army.has_speed_units(s)]:
+                print_small_banner(f'{SpeedDict[speed]} units', color='yellow', prnt=Verbose)
+                self._attack(army, speed)  # bath attacks happen in parallel
+                info('Enemy attacking!', color='red', blank_lines=1, prnt=Verbose)
+                army._attack(self, speed)
+                self.update_n_defeated()
+                army.update_n_defeated()
+            self.NRounds += 1
+        loser = self if self.defeated else army
+        print_banner(f'{loser} was defeated after {self.NRounds} round{"s" if self.NRounds > 1 else ""}', color='red', prnt=Verbose)
 
 
 class OwnArmy(Army):

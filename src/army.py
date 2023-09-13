@@ -134,6 +134,10 @@ class Army:
         return np.append(np.argsort(hp[:-1]), self.N - 1) if self[-1].Unit.Name == 'General' else np.argsort(hp)
 
     @property
+    def data(self):
+        return np.append([bat.NDefeated for bat in self], self.NRounds)
+
+    @property
     def size(self):
         return np.sum([bat.n_alive for bat in self if bat.Unit.Name != 'General'])
 
@@ -193,3 +197,7 @@ class EnemyArmy(Army):
 
     def __init__(self, scavengers=0, thugs=0, guard_dogs=0, roughnecks=0, stonethrowers=0, ranger=0):
         super().__init__(scavengers, thugs, guard_dogs, roughnecks, stonethrowers, ranger)
+
+    @property
+    def data(self):
+        return np.array([bat.NDefeated for bat in self])

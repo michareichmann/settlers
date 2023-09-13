@@ -58,6 +58,10 @@ class Battalion:
     def next(self):
         return next(unit for unit in self.Units if not unit.Dead)
 
+    @property
+    def dmg(self):
+        return sum(u.dmg for u in self)
+
     def update_n_defeated(self):
         self.NDefeated = self.N - self.n_alive
         self.CurrentDmg = 1

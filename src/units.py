@@ -49,7 +49,7 @@ class Unit:
 Recruit = Unit('Recruit', 40, 15, 30, .8, 1)
 Militia = Unit('Militia', 60, 20, 40, .8, 1)
 Soldier = Unit('Soldier', 90, 20, 40, .85, 1)
-Bowman = Unit('Bowman', 10, 20, 45, .8, 1)
+Bowman = Unit('Bowman', 10, 20, 40, .8, 1)
 LongBowman = Unit('LongBowman', 10, 30, 60, .8, 1)
 Cavalry = Unit('Cavalry', 5, 5, 10, .8, 2)
 General = Unit('General', 1, 180, 180, .8, 1, splash=1)

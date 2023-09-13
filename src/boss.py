@@ -1,4 +1,4 @@
-from src.army import Battalion, Unit
+from src.army import Battalion, Unit, Army, np
 
 
 class Boss(Battalion):
@@ -10,7 +10,10 @@ class Boss(Battalion):
         self.Unit = self[0]
 
     def __repr__(self):
-        return f'Boss {self.Name} ({self.alive})\n'
+        return f'Boss {self.Name} ({self.alive_str})\n'
+
+    def __add__(self, other: Army):
+        return other.add(self, pos=0)
 
     @property
     def alive_str(self):

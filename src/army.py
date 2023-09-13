@@ -111,11 +111,15 @@ class Army:
     def __getitem__(self, item):
         return self.Batallions[item]
 
-    def __add__(self, other: Battalion):
-        self.Batallions.append(other)
+    def __add__(self, other):
+        return self.add(other)
+
+    def add(self, other: Battalion, pos=None):
+        pos = choose(pos, self.N)
+        self.Batallions.insert(pos, other)
         self.N += 1
         self.IHP = self.hp_indices()
-        self.Speeds = np.append(self.Speeds, other.Unit.Speed)
+        self.Speeds = np.insert(self.Speeds, pos, other.Unit.Speed)
         return self
 
     def __str__(self):

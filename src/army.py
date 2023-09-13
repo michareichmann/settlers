@@ -98,12 +98,14 @@ class Battalion:
 class Army:
     Units = []
 
-    def __init__(self, *n_units):
+    def __init__(self, *n_units, max_units=200):
 
         self.Batallions = [Battalion(n, u) for n, u in zip(n_units, self.Units) if n]
         self.Speeds = np.array([bat.Unit.Speed for bat in self])
         self.N = len(self.Batallions)
-        self.NUnits = np.sum(bat.N for bat in self)
+
+        self.MaxUnits = max_units
+        self.NUnits = self.init_n_units()  # total number of units
         self.IHP = self.hp_indices()  # indices sorted by HP
 
         self.NRounds = 0
@@ -114,20 +116,26 @@ class Army:
     def __add__(self, other):
         return self.add(other)
 
-    def add(self, other: Battalion, pos=None):
-        pos = choose(pos, self.N)
-        self.Batallions.insert(pos, other)
-        self.N += 1
-        self.IHP = self.hp_indices()
-        self.Speeds = np.insert(self.Speeds, pos, other.Unit.Speed)
-        return self
-
     def __str__(self):
         return self.__class__.__name__
 
     def __repr__(self):
         bat_str = '  '.join([f'{bat!r}' for bat in self.Batallions])
-        return f'{self.__class__.__name__}:\n  {bat_str}'
+        return f'{self.__class__.__name__} with {self.NUnits} units:\n  {bat_str}'
+
+    def init_n_units(self):
+        n = sum(bat.N for bat in self if bat.Unit.Name != 'General')
+        warning(f'{self} has too many units ({n}/{self.MaxUnits})', prnt=n > self.MaxUnits)
+        return n
+
+    def add(self, other: Battalion, pos=None):
+        pos = choose(pos, self.N)
+        self.Batallions.insert(pos, other)
+        self.N += 1
+        self.NUnits += other.N
+        self.IHP = self.hp_indices()
+        self.Speeds = np.insert(self.Speeds, pos, other.Unit.Speed)
+        return self
 
     def hp_indices(self):
         hp = [bat.Unit.HP for bat in self]

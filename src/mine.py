@@ -1,6 +1,9 @@
-from src.resource import *
+import pickle
 from datetime import datetime
 from typing import List
+
+from src.resource import *
+from utils.helpers import Dir, load_pickle
 
 
 def now():
@@ -42,17 +45,38 @@ class Mine:
 
 class Mines:
 
+    DataDir = Dir.joinpath('data')
+    FileName = DataDir.joinpath('mines.pickle')
+
     def __init__(self):
         self.L = self.load()
 
-    def load(self) -> List:
-        ...
+    def __getitem__(self, item):
+        return self.L[item]
+
+    def __repr__(self):
+        mine_str = '\n'.join(f'  {mine}' for mine in self)
+        return f'Registered mines ({self.size}): \n{mine_str}'
+
+    @property
+    def size(self):
+        return len(self.L)
+
+    @staticmethod
+    def load() -> List:
+        return load_pickle(Mines.FileName) if Mines.FileName.exists() else []
 
     def save(self):
-        ...
+        with open(self.FileName, 'wb') as f:
+            pickle.dump(self.L, f)
 
-    def add(self):
-        ...
+    def register(self, mine: Mine):
+        self.L.append(mine)
+        self.save()
+
+    def remove(self, i):
+        print(f'removed {self.L.pop(i)} from the mines')
+        self.save()
 
 
 class CoalMine(Mine):

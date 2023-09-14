@@ -1,7 +1,7 @@
 from utils.helpers import *
 from src.units import *
 
-Verbose = False
+Verbose = True
 
 SpeedDict = {0: 'Slow',
              1: 'Normal',
@@ -73,6 +73,10 @@ class Battalion:
         self.NDefeated = 0
         self.CurrentDmg = 1
 
+    def reset_current_dmg(self):
+        if self.CurrentDmg == 1:
+            self.CurrentDmg = self.dmg
+
     def normal_attack(self, battalion: 'Battalion'):
         for unit in self.Units[self.NAttacks + self.NDefeated:]:
             try:
@@ -84,7 +88,7 @@ class Battalion:
     def splash_attack(self, battalion: 'Battalion'):
         for unit in self.Units[self.NAttacks + self.NDefeated:]:
             try:
-                self.CurrentDmg = unit.dmg
+                self.reset_current_dmg()
                 while self.CurrentDmg > 0:
                     enemy = battalion.next
                     self.CurrentDmg = unit.attack(enemy, self.CurrentDmg)  # returns remaining dmg

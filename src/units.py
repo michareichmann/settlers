@@ -24,6 +24,10 @@ class Unit:
                 f'  Accuracy: {self.Accuracy:.0%}\n'
                 f'  Dead: {self.Dead}')
 
+    def __mul__(self, other):
+        from src.army import Battalion
+        return Battalion(other, self)
+
     @property
     def dmg(self):
         return self.DmgMax if rnd.random() < self.Accuracy else self.DmgMin

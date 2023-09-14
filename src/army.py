@@ -1,7 +1,7 @@
 from utils.helpers import *
 from src.units import *
 
-Verbose = True
+Verbose = False
 
 SpeedDict = {0: 'Slow',
              1: 'Normal',

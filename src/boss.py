@@ -1,4 +1,4 @@
-from src.army import Battalion, Unit, Army, np
+from src.army import Battalion, Unit, Army
 
 
 class Boss(Battalion):
@@ -23,3 +23,4 @@ class Boss(Battalion):
 Skunk = Boss('Skunk', 5000, 1, 100, .5, 0)
 OneEyedBert = Boss('One-Eyed Bert', 6000, 300, 500, .5, 0)
 MetalTooth = Boss('Metal Tooth', 11000, 250, 500, .5, 0)
+Chuck = Boss('Chuck', 9000, 2000, 2500, .5, 0)

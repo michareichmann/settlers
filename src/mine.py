@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List
 
 from src.resource import *
-from utils.helpers import Dir, load_pickle
+from utils.helpers import Dir, load_pickle, print_table
 
 
 def now():
@@ -29,7 +29,10 @@ class Mine:
         self.EndOfLife = self.end_of_life
 
     def __repr__(self):
-        return f'{self.__class__.__name__}{self.dep_str()}'
+        return f'{self.Resource} mine containing {self.Resource!r}'
+
+    def __lt__(self, other: 'Mine'):
+        return self.EndOfLife < other.EndOfLife
 
     def dep_str(self):
         return f' containing {self.Resource!r}' if self.Resource.N > 1 else ''
@@ -74,7 +77,7 @@ class Mines:
 
     def save(self):
         with open(self.FileName, 'wb') as f:
-            pickle.dump(self.L, f)
+            pickle.dump(sorted(self.L), f)
 
     def register(self, mine: Mine):
         self.L.append(mine)
@@ -83,6 +86,15 @@ class Mines:
     def remove(self, i):
         print(f'removed {self.L.pop(i)} from the mines')
         self.save()
+
+    def update(self):
+        for mine in self:
+            mine.update()
+        self.save()
+
+    def print(self):
+        rows = [[m.Resource, m.Level, m.Resource.N, str(m.time_left)] for m in self.L]
+        print_table(rows, header=['Type', 'Lvl', 'Deposit', 'Time left'])
 
 
 class CoalMine(Mine):

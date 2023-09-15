@@ -42,6 +42,12 @@ class Mine:
     def time_left(self):
         return self.EndOfLife - now()
 
+    def update(self):
+        tdiff = now() - self.T
+        n_cycles = int(tdiff / self.ProdTime)
+        self.T += n_cycles * self.ProdTime
+        self.Resource -= n_cycles * self.Level
+
 
 class Mines:
 

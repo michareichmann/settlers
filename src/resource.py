@@ -21,6 +21,9 @@ class Resource:
         v = deepcopy(self)
         return v.update(self.N + other)
 
+    def __sub__(self, other):
+        return self.__add__(-other)
+
     def __mul__(self, other):
         v = deepcopy(self)
         return v.update(self.N * other)
@@ -32,10 +35,16 @@ class Resource:
         n = f'{self.N} ' if self.N > 1 else ""
         return f'{n}{self}'
 
+    @property
+    def prod_time(self):
+        return self.ProdTime * self.N
+
+    @property
+    def cost(self):
+        return self.Cost * self.N
+
     def update(self, n):
         self.N = n
-        self.ProdTime *= n
-        self.Cost *= n
         return self
 
 

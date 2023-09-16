@@ -37,6 +37,9 @@ class Mine:
 
     def __lt__(self, other: 'Mine'):
         return self.EndOfLife < other.EndOfLife
+    
+    def time(self, n):
+        return n / self.Level * self.ProdTime
 
     def set_lvl(self, lvl):
         self.Level = lvl
@@ -49,9 +52,9 @@ class Mine:
 
     def add_deposit(self, n):
         self.Resource += n
-        new_eol = self.end_of_life
-        info(f'You added {new_eol - self.EndOfLife} of life time')
-        self.EndOfLife = new_eol
+        t_extra = self.time(n)
+        info(f'You added {t_extra} of life time')
+        self.EndOfLife = self.end_of_life
 
     @property
     def end_of_life(self):
@@ -84,6 +87,7 @@ class Mines:
         self.L = self.load()
 
         self.Timer = RepeatTimer(5, self.update)
+        self.Timer.daemon = True
         self.Timer.start()
 
     def __getitem__(self, item):
@@ -119,8 +123,11 @@ class Mines:
             mine.update()
 
     def print(self):
-        rows = [[m.Resource, m.Level, m.Resource.N, str(m.time_left)] for m in self.L]
-        print_table(rows, header=['Type', 'Lvl', 'Deposit', 'Time left'])
+        rows = [[i, m.Resource, m.Level, m.Resource.N, str(m.time_left)] for i, m in enumerate(self.L)]
+        print_table(rows, header=['Index', 'Type', 'Lvl', 'Deposit', 'Time left'])
+
+    def add_deposit(self, i, n):
+        self[i].add_deposit(n)
 
 
 class CoalMine(Mine):

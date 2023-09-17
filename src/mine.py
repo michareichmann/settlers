@@ -4,13 +4,6 @@ from typing import List
 
 from src.resource import *
 from utils.helpers import Dir, load_pickle, print_table, info
-from threading import Timer
-
-
-class RepeatTimer(Timer):
-    def run(self):
-        while not self.finished.wait(self.interval):
-            self.function(*self.args, **self.kwargs)
 
 
 def now():
@@ -32,11 +25,14 @@ class Mine:
 
         self.Paused = paused
 
+    def __str__(self):
+        return f'{self.Resource} mine'
+
     def __repr__(self):
-        return f'{self.Resource} mine containing {self.Resource!r}'
+        return f'{self} containing {self.Resource!r}'
 
     def __lt__(self, other: 'Mine'):
-        return self.EndOfLife < other.EndOfLife
+        return True if other.Paused else False if self.Paused else self.EndOfLife < other.EndOfLife
     
     def time(self, n):
         return n / self.Level * self.ProdTime
@@ -44,6 +40,9 @@ class Mine:
     def set_lvl(self, lvl):
         self.Level = lvl
         self.EndOfLife = self.end_of_life
+
+    def upgrade(self):
+        self.set_lvl(self.Level + 1)
 
     def set_deposit(self, s):
         self.T = now()
@@ -77,6 +76,10 @@ class Mine:
     def activate(self):
         self.Paused = False
 
+    @property
+    def data(self):
+        return [self.Resource, self.Level, self.Resource.N, self.time_left, ['ON', 'OFF'][self.Paused]]
+
 
 class Mines:
 
@@ -86,19 +89,12 @@ class Mines:
     def __init__(self):
         self.L = self.load()
 
-        self.Timer = RepeatTimer(5, self.update)
-        self.Timer.daemon = True
-        self.Timer.start()
-
     def __getitem__(self, item):
         return self.L[item]
 
     def __repr__(self):
         mine_str = '\n'.join(f'  {mine}' for mine in self)
         return f'Registered mines ({self.size}): \n{mine_str}'
-
-    def __del__(self):
-        self.save()
 
     @property
     def size(self):

@@ -1,9 +1,14 @@
 from PyQt5.QtWidgets import QLabel, QLineEdit, QPushButton, QSpinBox, QComboBox, QCheckBox, QPlainTextEdit
+from PyQt5.QtCore import Qt
 from plotting.utils import do, do_nothing
 
 
 FontSize = 13
 ButtonHeight = 50
+
+LEFT = Qt.AlignLeft
+RIGHT = Qt.AlignRight
+CEN = Qt.AlignCenter
 
 
 def combobox(lst, ind=0):
@@ -54,7 +59,7 @@ def check_box(value=False, size=None):
 
 
 def label(txt, color=None, bold=False, font=None, font_size=FontSize * 1.5, bg_col=None):
-    lb = QLabel(txt)
+    lb = QLabel(str(txt))
     format_widget(lb, color, bold, font_size, font, bg_col)
     return lb
 

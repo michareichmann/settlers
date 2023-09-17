@@ -4,7 +4,7 @@ import numpy.random as rnd
 
 class Unit:
 
-    def __init__(self, name, hp, dmg_min, dmg_max, accuracy, speed, splash=None):
+    def __init__(self, name, hp, dmg_min, dmg_max, accuracy, speed, splash=None, flanking=None):
         self.Name = name
         self.HP = hp
         self.DmgMin = dmg_min
@@ -12,6 +12,7 @@ class Unit:
         self.Accuracy = accuracy
         self.Speed = speed
         self.Splash = choose(splash, 1 if speed == 0 else 0)
+        self.Flanking = choose(flanking, speed == 2)
 
         self.CurrentHP = hp
         self.Hits = 0

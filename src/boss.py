@@ -3,8 +3,8 @@ from src.army import Battalion, Unit, Army
 
 class Boss(Battalion):
 
-    def __init__(self,  name: str, hp, dmg_min, dmg_max, accuracy=.5, speed=0):
-        super().__init__(1, Unit(name, hp, dmg_min, dmg_max, accuracy, speed))
+    def __init__(self,  name: str, hp, dmg_min, dmg_max, accuracy=.5, speed=0, splash=None, flanking=None):
+        super().__init__(1, Unit(name, hp, dmg_min, dmg_max, accuracy, speed, splash, flanking))
 
         self.Name = name
         self.Unit = self[0]

@@ -157,8 +157,8 @@ class Army:
     def size(self):
         return np.sum([bat.n_alive for bat in self if bat.Unit.Name != 'General'])
 
-    def indices(self, speed):
-        return [i for i in (self.IHP if speed == 2 else range(self.N)) if self[i].alive]
+    def indices(self, flanking):
+        return [i for i in (self.IHP if flanking else range(self.N)) if self[i].alive]
 
     def has_speed_units(self, speed):
         return any(self[i].alive for i in np.where(self.Speeds == speed)[0])
@@ -181,7 +181,7 @@ class Army:
 
     def _attack(self, army: 'Army', speed):
         for bat in self.speed_batallions(speed):
-            indices = iter(army.indices(speed))
+            indices = iter(army.indices(bat.Unit.Flanking))
             while bat.can_attack and not army.defeated:
                 bat.attack(army[next(indices)])
             bat.NAttacks = 0

@@ -147,7 +147,7 @@ class Army:
 
     def hp_indices(self):
         hp = [bat.Unit.HP for bat in self]
-        return np.append(np.argsort(hp[:-1]), self.N - 1) if self[-1].Unit.Name == 'General' else np.argsort(hp)
+        return np.append(np.argsort(hp[:-1]), self.N - 1) if self.N and self[-1].Unit.Name == 'General' else np.argsort(hp)
 
     @property
     def data(self):

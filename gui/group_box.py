@@ -6,6 +6,7 @@ from gui.utils import format_widget
 class GroupBox(QGroupBox):
 
     Height = 40
+    Title = 'Group Box'
 
     def __init__(self):
         super(GroupBox, self).__init__()
@@ -14,7 +15,7 @@ class GroupBox(QGroupBox):
         self.configure()
 
     def configure(self):
-        self.setTitle('Mines')
+        self.setTitle(self.Title)
         self.setFont(QFont('Ubuntu', 8, QFont.Bold))
         format_widget(self, color='red')
 

@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QLabel, QLineEdit, QPushButton, QSpinBox, QComboBox, QCheckBox, QPlainTextEdit, QAbstractButton
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QPainter, QIcon, QPixmap
-from plotting.utils import do, do_nothing, Path
+from plotting.utils import do, do_nothing, Path, choose
 
 
 FontSize = 13
@@ -12,38 +12,56 @@ RIGHT = Qt.AlignRight
 CEN = Qt.AlignCenter
 
 
-def combobox(lst, ind=0):
-    b = QComboBox()
+def my_widget(cls, align: Qt.AlignmentFlag, xpos: int = 0, parent=None):
+
+    class MyWidget(cls):
+
+        def __init__(self):
+            super().__init__(parent)
+            self.Align = align
+            self.XPos = xpos
+
+        def __repr__(self):
+            return f'My{cls.__name__}'
+
+        def __getitem__(self, item):
+            return [self, self.Align, self.XPos][item]
+
+    return MyWidget()
+
+
+def combobox(lst, ind=0, align=CEN, xpos=0):
+    b = my_widget(QComboBox, align, xpos)
     b.addItems(lst)
     b.setCurrentIndex(ind)
     return b
 
 
-def spinbox(low, high, value, step=1):
-    b = QSpinBox()
+def spinbox(low, high, value, step=1, align=CEN, xpos=0):
+    b = my_widget(QSpinBox, align, xpos)
     b.setRange(low, high)
     b.setValue(value)
     b.setSingleStep(step)
     return b
 
 
-def line_edit(txt='', length=None):
-    le = QLineEdit()
+def line_edit(txt='', length=None, align=CEN, xpos=0):
+    le = my_widget(QLineEdit, align, xpos)
     le.setText(str(txt))
     do(le.setMaximumWidth, length)
     return le
 
 
-def text_edit(txt='', length=None, min_height=None):
-    t = QPlainTextEdit()
+def text_edit(txt='', length=None, min_height=None, align=CEN, xpos=0):
+    t = my_widget(QPlainTextEdit, align, xpos)
     t.setPlainText(txt)
     do(t.setMaximumWidth, length)
     do(t.setMinimumHeight, min_height)
     return t
 
 
-def button(txt, f=do_nothing, size=None, height=ButtonHeight):
-    but = QPushButton()
+def button(txt, f=do_nothing, size=None, height=ButtonHeight, align=CEN, xpos=0):
+    but = my_widget(QPushButton, align, xpos)
     but.setText(txt)
     do(but.setFixedWidth, size)
     do(but.setMaximumHeight, height)
@@ -51,22 +69,23 @@ def button(txt, f=do_nothing, size=None, height=ButtonHeight):
     return but
 
 
-def check_box(value=False, size=None):
-    b = QCheckBox()
+def check_box(value=False, size=None, align=CEN, xpos=0):
+    b = my_widget(QCheckBox, align, xpos)
     b.setChecked(value)
     if size is not None:
         b.setStyleSheet('QCheckBox::indicator {{width: {0}px; height: {0}px;}}'.format(size))
     return b
 
 
-def label(txt, color=None, bold=False, font=None, font_size=FontSize * 1.5, bg_col=None):
-    lb = QLabel(str(txt))
-    format_widget(lb, color, bold, font_size, font, bg_col)
+def label(txt, color=None, bold=False, font=None, font_size=FontSize * 1.5, bg_col=None, align=CEN, xpos=0):
+    lb = my_widget(QLabel, align, xpos)
+    lb.setText(str(txt))
+    format_widget(lb, color, bold, font_size, font, bg_col)  # noqa
     return lb
 
 
 def pix_map(p: Path):
-    return QIcon("filepath.svg").pixmap(QSize()) if p.stem == 'svg' else QPixmap(str(p))
+    return QIcon("filepath.svg").pixmap(QSize(100, 100)) if p.stem == 'svg' else QPixmap(str(p))
 
 
 def format_widget(widget, color=None, bold=None, font_size=None, font=None, bg_col=None):
@@ -80,15 +99,21 @@ def style_sheet(dic):
 
 
 class PicButton(QAbstractButton):
-    def __init__(self, f, pic: Path, pic_hover: Path, pic_pressed: Path, fr=None, parent=None):
+    def __init__(self, f, pic: Path, pic_hover: Path = None, pic_pressed: Path = None, fr=None, align: Qt.AlignmentFlag = CEN, xpos: int = 0, parent=None):
         super(PicButton, self).__init__(parent)
         self.PicName = pic.name
         self.PixMap = pix_map(pic)
-        self.PixMapHover = pix_map(pic_hover)
-        self.PixMapPressed = pix_map(pic_pressed)
+        self.PixMapHover = pix_map(choose(pic_hover, pic.with_stem(f'{pic.stem}-hover')))
+        self.PixMapPressed = pix_map(choose(pic_pressed, pic.with_stem(f'{pic.stem}-pressed')))
+
+        self.Align = align
+        self.XPos = xpos
 
         self.pressed.connect(f)  # noqa
         self.released.connect(self.update if fr is None else fr)  # noqa
+
+    def __getitem__(self, item):
+        return [self, self.Align, self.XPos][item]
 
     def paint(self, p: QPainter):
         pass
@@ -114,9 +139,9 @@ class PicButton(QAbstractButton):
 
 class PicButOpacity(PicButton):
 
-    def __init__(self, f, pic: Path, opacity=.5, parent=None):
+    def __init__(self, f, pic: Path, opacity=.5, align: Qt.AlignmentFlag = CEN, xpos: int = 0, parent=None):
 
-        super().__init__(f, pic, pic, pic, self.set_checked, parent)
+        super().__init__(f, pic, pic, pic, self.set_checked, align, xpos, parent)
         self.Opacity = opacity
         self.Clicked = False
 

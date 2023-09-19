@@ -5,7 +5,7 @@ from gui.utils import format_widget
 
 class GroupBox(QGroupBox):
 
-    Height = 40
+    Height = 35
     Title = 'Group Box'
 
     def __init__(self):

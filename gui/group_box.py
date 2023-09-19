@@ -11,8 +11,12 @@ class GroupBox(QGroupBox):
     def __init__(self):
         super(GroupBox, self).__init__()
 
-        self.Widgets, self.Labels = [], []
+        self.Widgets, self.Labels, self.Buttons, self.LineEdits = [], [], [], []
         self.configure()
+
+    @property
+    def used_containers(self):
+        return [w for w in [self.Widgets, self.Labels, self.Buttons, self.LineEdits] if len(w)]
 
     def configure(self):
         self.setTitle(self.Title)

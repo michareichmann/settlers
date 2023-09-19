@@ -13,8 +13,15 @@ class _MineBox(GroupBox):
 
         self.Mines = mines
         super().__init__()
+
+        # LAYOUT
+        self.setLayout(QGridLayout(self))
+        self.layout().setContentsMargins(4, 4, 4, 4)
+        self.Layout: QGridLayout = self.layout()  # noqa
+
+        self.create_header()
         self.create_widgets()
-        self.make()
+        # self.make()
 
     def __getitem__(self, item):
         return self.Mines[item]
@@ -24,7 +31,6 @@ class _MineBox(GroupBox):
         return range(self.Mines.size)
 
     def adjust_height(self):
-        print(self.Mines.size)
         self.setFixedHeight(self.Height * (self.Mines.size + 1))
 
     def configure(self):
@@ -34,8 +40,8 @@ class _MineBox(GroupBox):
     def index(self, mine: Mine):
         return self.Mines.L.index(mine)
 
-    def pop_widgets(self, mine: Mine):
-        i = self.index(mine)
+    def pop_widgets(self, mine: Mine = None):
+        i = -1 if mine is None else self.index(mine)
         return sum([con.pop(i) for con in self.used_containers], start=[])
 
     def create_widgets(self):
@@ -45,29 +51,17 @@ class _MineBox(GroupBox):
     def _add_mine(self, mine: Mine):
         pass
 
-    def _remove_mine(self, mine: Mine):
+    def _remove_mine(self, mine: Mine = None):
         """ remove last mine row from the layout """
         for w in self.pop_widgets(mine):
             self.layout().removeWidget(w)
         self.adjust_height()
 
-    def _remove_last_mine(self):
-        self._remove_mine(self[-1])
-
-    def create_header(self, layout: QGridLayout):
-        layout.addWidget(label('Default', bold=True), 0, 0, CEN)
+    def create_header(self):
+        self.Layout.addWidget(label('Default', bold=True), 0, 0, CEN)
 
     def make(self):
-        layout = QGridLayout(self)
-        layout.setContentsMargins(4, 4, 4, 4)
-
-        self.create_header(layout)
-
-        for con in self.used_containers:
-            for i, lst in enumerate(con, 1):
-                for w in lst:
-                    layout.addWidget(w, i, w.XPos, w.Align)
-
+        pass
         # for widget in self.children():
         #     try:
         #         format_widget(widget, font='ubuntu', color='grey', font_size=FontSize, bold=False)
@@ -77,8 +71,6 @@ class _MineBox(GroupBox):
         #         print(err, type(err))
         #         pass
 
-        self.setLayout(layout)
-
 
 class MineBox(_MineBox):
 
@@ -87,18 +79,17 @@ class MineBox(_MineBox):
     Title = 'Mines'
     Pos = list(range(5))
 
-    def __init__(self, mines: Mines):
-
-        super().__init__(mines)
-
-    def create_header(self, layout: QGridLayout):
+    def create_header(self):
         for i, name in enumerate(MineBox.Header):
-            layout.addWidget(label(name, bold=True), 0, i, CEN)
+            self.Layout.addWidget(label(name, bold=True), 0, i, CEN)
 
     def update(self):
         self.Mines.update()
         if self.Mines.size < len(self.Labels):
-            self._remove_last_mine()
+            self._remove_mine()
+        if self.Mines.size > len(self.Labels):
+            self._add_mine(self[-1])
+            self.adjust_height()
         for mine, row in zip(self.Mines.L, self.Labels):
             for lbl, txt in zip(row, mine.data):
                 lbl[0].setText(str(txt))
@@ -106,11 +97,8 @@ class MineBox(_MineBox):
     def _add_mine(self, mine: Mine):
         align = [RIGHT, CEN, CEN, RIGHT, CEN]
         self.Labels.append([label(txt, align=align[i], xpos=self.Pos[i]) for i, txt in enumerate(mine.data)])
-
-    def add_mine(self, mine):
-        self.Mines + mine
-        self.Labels = self.create_label()
-        self.make()
+        for lbl in self.Labels[-1]:
+            self.Layout.addWidget(lbl, len(self.Labels) + 1, lbl.XPos, lbl.Align)
 
 
 class ControlBox(_MineBox):
@@ -119,24 +107,28 @@ class ControlBox(_MineBox):
     ButtonPos = [0, 1, 3, 4]
     InputPos = [2]
 
-    def __init__(self, mines: Mines):
-
-        super().__init__(mines)
-
-    def create_header(self, layout: QGridLayout):
-        layout.addWidget(label('Action', bold=True), 0, 0, 1, 4, CEN)
+    def create_header(self):
+        self.Layout.addWidget(label('Action', bold=True), 0, 0, 1, 4, CEN)
 
     def delete_mine(self, mine):
         self._remove_mine(mine)
         self.Mines.remove(self.index(mine))
         self.adjust_height()
 
-    def _add_mine(self, mine: Mine):
-        self.Buttons.append([PicButton(mine.upgrade, Dir.joinpath('figures', 'upgrade.png'), align=CEN, xpos=self.ButtonPos[0]),
-                             button('Add', partial(self.add_deposit, mine), align=CEN, xpos=self.ButtonPos[1]),
-                             button(['Pause', 'Activate'][mine.Paused], partial(self.set_status, mine), size=55, align=CEN, xpos=self.ButtonPos[2]),
-                             PicButton(partial(self.delete_mine, mine), Dir.joinpath('figures', 'delete.png'), align=CEN, xpos=self.ButtonPos[3])])
-        self.LineEdits.append([line_edit(1, align=CEN, xpos=self.InputPos[0])])
+    def add_mine(self, mine):
+        self.Mines + mine
+        self._add_mine(mine)
+        self.adjust_height()
+
+    def _add_mine(self, mine: Mine, use_index=False):
+        i = self.index(mine) if use_index else self.Mines.size
+        self.Buttons.insert(i, [PicButton(mine.upgrade, Dir.joinpath('figures', 'upgrade.png'), align=CEN, xpos=self.ButtonPos[0]),
+                                button('Add', partial(self.add_deposit, mine), align=CEN, xpos=self.ButtonPos[1]),
+                                button(['Pause', 'Activate'][mine.Paused], partial(self.set_status, mine), size=55, align=CEN, xpos=self.ButtonPos[2]),
+                                PicButton(partial(self.delete_mine, mine), Dir.joinpath('figures', 'delete.png'), align=CEN, xpos=self.ButtonPos[3])])
+        self.LineEdits.insert(i, [line_edit(500, align=CEN, xpos=self.InputPos[0])])
+        for w in self.Buttons[-1] + self.LineEdits[-1]:
+            self.Layout.addWidget(w, len(self.Buttons) + 1, w.XPos, w.Align)
 
     def add_deposit(self, mine: Mine):
         mine.add_deposit(int(self.LineEdits[self.Mines.L.index(mine)][0].text()))

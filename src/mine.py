@@ -1,6 +1,7 @@
 import pickle
 from datetime import datetime
 from typing import List
+from functools import partial
 
 from src.resource import *
 from utils.helpers import Dir, load_pickle, print_table, info
@@ -14,16 +15,16 @@ class Mine:
 
     def __init__(self, resource: Resource, dep_size: int, extra_time, prod_time=None, lvl=1, paused=False):
 
-        self.Resource = resource * dep_size
+        self.Resource = resource * int(dep_size)
         self.ExtraTime = duration(extra_time)
         self._ProdTime = resource.ProdTime if prod_time is None else duration(prod_time)
         self.ProdTime = self._ProdTime + self.ExtraTime
-        self.Level = lvl
+        self.Level = int(lvl)
 
         self.T = now()
         self.EndOfLife = self.end_of_life
 
-        self.Paused = paused
+        self.Paused = bool(paused)
 
     def __str__(self):
         return f'{self.Resource} mine'
@@ -70,11 +71,13 @@ class Mine:
         if not self.Paused:
             self.Resource -= n_cycles * self.Level
 
-    def pause(self):
-        self.Paused = True
+    def set_status(self, status: bool):
+        self.Paused = status
+    pause = partial(set_status, True)
+    activate = partial(set_status, False)
 
-    def activate(self):
-        self.Paused = False
+    def change_status(self):
+        self.set_status(not self.Paused)
 
     @property
     def data(self):
@@ -96,6 +99,10 @@ class Mines:
         mine_str = '\n'.join(f'  {mine}' for mine in self)
         return f'Registered mines ({self.size}): \n{mine_str}'
 
+    def __add__(self, other: Mine):
+        self.L.append(other)
+        self.reload()
+
     @property
     def size(self):
         return len(self.L)
@@ -107,6 +114,10 @@ class Mines:
     def save(self):
         with open(self.FileName, 'wb') as f:
             pickle.dump(sorted(self.L), f)
+
+    def reload(self):
+        self.save()
+        self.L = self.load()
 
     def register(self, mine: Mine):
         self.L.append(mine)
@@ -148,5 +159,10 @@ class GoldMine(Mine):
 
     def __init__(self, dep_size, extra_time, lvl=1, paused=False):
         super().__init__(GoldOre, dep_size, extra_time, lvl=lvl, paused=paused)
+
+
+def mine_from_str(s, dep_size, extra_time, lvl=1, paused=False):
+    classes = [CopperMine, IronMine, CoalMine, GoldMine]
+    return next(cls(dep_size, extra_time, lvl, paused) for cls in classes if s.split('-')[0].lower() in cls.__name__.lower())
 
 

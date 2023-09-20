@@ -16,8 +16,6 @@ from gui.utils import *
 from src.mine import Mines, mine_from_str
 from utils.helpers import Dir, info
 
-# todo: move layout to fields
-
 
 class Gui(QMainWindow):
 
@@ -26,28 +24,44 @@ class Gui(QMainWindow):
     BUTTON_HEIGHT = 50
     Version = 0.0
     Title = f'Settlers Online Gui V{Version}'
+    T_UPDATE = 1000
 
     def __init__(self):
         super(Gui, self).__init__()
 
-        self.MainBox = QVBoxLayout()
-        self.configure()
+        self.Layout = self.create_layout()
 
+        # SUBLAYOUTS
         self.Mines = Mines()
         self.MineBox = MineBox(self.Mines)
         self.ControlBox = ControlBox(self.Mines)
-
         self.MenuBar = MenuBar(self, True)
+        self.create_boxes()
 
-        self.make()
+        self.Layout.addStretch()
 
-        self.MainBox.addStretch()
-
-        self.timer = QTimer()  # updates the plot
-        self.timer.timeout.connect(self.update)  # noqa
-        self.timer.start(1000)
+        self.Timer = self.create_timer()
 
         self.show()
+
+    def create_layout(self) -> QVBoxLayout:
+        self.configure()
+        layout = QVBoxLayout()
+        self.setCentralWidget(QWidget())
+        self.centralWidget().setLayout(layout)
+        return layout  # noqa
+
+    def create_boxes(self):
+        layout = QHBoxLayout()
+        layout.addWidget(self.MineBox)
+        layout.addWidget(self.ControlBox)
+        self.Layout.addLayout(layout)
+
+    def create_timer(self) -> QTimer:
+        t = QTimer()
+        t.timeout.connect(self.update)  # noqa
+        t.start(Gui.T_UPDATE)
+        return t
 
     def closeEvent(self, event):
         self.MineBox.Mines.save()
@@ -56,20 +70,14 @@ class Gui(QMainWindow):
     def update(self):
         self.MineBox.update()
 
-    def make(self):
-        layout = QHBoxLayout()
-        layout.addWidget(self.MineBox)
-        layout.addWidget(self.ControlBox)
-        self.MainBox.addLayout(layout)
-
     def configure(self):
         self.setGeometry(1000, 500, Gui.Width, Gui.Height)
         self.setWindowTitle(Gui.Title)
         self.setWindowIcon(QIcon(str(Dir.joinpath('figures', 'favicon.ico'))))
-        self.setCentralWidget(QWidget())
-        self.centralWidget().setLayout(self.MainBox)
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
     def mine_dialogue(self):
+        # todo: make into class
         q = QDialog()
         q.setWindowTitle('Add Mine')
 
@@ -84,8 +92,9 @@ class Gui(QMainWindow):
         deposit = [label('Deposit:'), line_edit(500)]
         level = [label('Level:'), line_edit(1)]
         paused = [label('Paused:'), check_box()]
+        speed = [label('Double speed:'), check_box()]
         align = [RIGHT, CEN, LEFT]
-        for i, row in enumerate([extra_time, deposit, level]):
+        for i, row in enumerate([extra_time, deposit, level, paused, speed]):
             for j, widget in enumerate(row):
                 value_layout.addWidget(widget, i, j, align[j])
 
@@ -93,7 +102,7 @@ class Gui(QMainWindow):
             for k in range(pic_layout.count()):
                 w = pic_layout.itemAt(k).widget()
                 if w.Clicked:  # noqa
-                    self.ControlBox.add_mine(mine_from_str(w.PicName, deposit[1].text(), int(extra_time[1].text()), level[1].text(), paused[1].isChecked()))  # noqa
+                    self.ControlBox.add_mine(mine_from_str(w.PicName, deposit[1].text(), int(extra_time[1].text()), level[1].text(), paused[1].isChecked(), [2, 1][speed[1].isChecked()]))  # noqa
                     break
             print(self.Mines, self.MineBox.Mines)
             q.done(QDialog.Accepted)

@@ -13,12 +13,13 @@ def now():
 
 class Mine:
 
-    def __init__(self, resource: Resource, dep_size: int, extra_time, prod_time=None, lvl=1, paused=False):
+    def __init__(self, resource: Resource, dep_size: int, extra_time, prod_time=None, lvl=1, paused=False, speed=1):
 
         self.Resource = resource * int(dep_size)
         self.ExtraTime = duration(extra_time)
         self._ProdTime = resource.ProdTime if prod_time is None else duration(prod_time)
-        self.ProdTime = self._ProdTime + self.ExtraTime
+        self.Speed = speed
+        self.ProdTime = self._ProdTime * speed + self.ExtraTime
         self.Level = int(lvl)
 
         self.T = now()
@@ -139,30 +140,30 @@ class Mines:
 
 class CoalMine(Mine):
 
-    def __init__(self, dep_size, extra_time, lvl=1, paused=False):
-        super().__init__(Coal, dep_size, extra_time, prod_time=90, lvl=lvl, paused=paused)
+    def __init__(self, dep_size, extra_time, lvl=1, paused=False, speed=1):
+        super().__init__(Coal, dep_size, extra_time, prod_time=90, lvl=lvl, paused=paused, speed=speed)
 
 
 class CopperMine(Mine):
 
-    def __init__(self, dep_size, extra_time, lvl=1, paused=False):
-        super().__init__(CopperOre, dep_size, extra_time, lvl=lvl, paused=paused)
+    def __init__(self, dep_size, extra_time, lvl=1, paused=False, speed=1):
+        super().__init__(CopperOre, dep_size, extra_time, lvl=lvl, paused=paused, speed=speed)
 
 
 class IronMine(Mine):
 
-    def __init__(self, dep_size, extra_time, lvl=1, paused=False):
-        super().__init__(IronOre, dep_size, extra_time, lvl=lvl, paused=paused)
+    def __init__(self, dep_size, extra_time, lvl=1, paused=False, speed=1):
+        super().__init__(IronOre, dep_size, extra_time, lvl=lvl, paused=paused, speed=speed)
 
 
 class GoldMine(Mine):
 
-    def __init__(self, dep_size, extra_time, lvl=1, paused=False):
-        super().__init__(GoldOre, dep_size, extra_time, lvl=lvl, paused=paused)
+    def __init__(self, dep_size, extra_time, lvl=1, paused=False, speed=1):
+        super().__init__(GoldOre, dep_size, extra_time, lvl=lvl, paused=paused, speed=speed)
 
 
-def mine_from_str(s, dep_size, extra_time, lvl=1, paused=False):
+def mine_from_str(s, dep_size, extra_time, lvl=1, paused=False, speed=1):
     classes = [CopperMine, IronMine, CoalMine, GoldMine]
-    return next(cls(dep_size, extra_time, lvl, paused) for cls in classes if s.split('-')[0].lower() in cls.__name__.lower())
+    return next(cls(dep_size, extra_time, lvl, paused, speed) for cls in classes if s.split('-')[0].lower() in cls.__name__.lower())
 
 

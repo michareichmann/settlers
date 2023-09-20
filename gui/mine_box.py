@@ -14,14 +14,9 @@ class _MineBox(GroupBox):
         self.Mines = mines
         super().__init__()
 
-        # LAYOUT
-        self.setLayout(QGridLayout(self))
-        self.layout().setContentsMargins(4, 4, 4, 4)
-        self.Layout: QGridLayout = self.layout()  # noqa
-
+        self.Layout = self.create_layout()
         self.create_header()
         self.create_widgets()
-        # self.make()
 
     def __getitem__(self, item):
         return self.Mines[item]
@@ -44,6 +39,16 @@ class _MineBox(GroupBox):
         i = -1 if mine is None else self.index(mine)
         return sum([con.pop(i) for con in self.used_containers], start=[])
 
+    # ----------------------------------
+    # region LAYOUT & WIDGETS
+    def create_layout(self) -> QGridLayout:
+        self.setLayout(QGridLayout(self))
+        self.layout().setContentsMargins(4, 4, 4, 4)
+        return self.layout()  # noqa
+
+    def create_header(self):
+        self.Layout.addWidget(label('Default', bold=True), 0, 0, CEN)
+
     def create_widgets(self):
         for mine in self:
             self._add_mine(mine)
@@ -56,9 +61,8 @@ class _MineBox(GroupBox):
         for w in self.pop_widgets(mine):
             self.layout().removeWidget(w)
         self.adjust_height()
-
-    def create_header(self):
-        self.Layout.addWidget(label('Default', bold=True), 0, 0, CEN)
+    # endregion
+    # ----------------------------------
 
     def make(self):
         pass
@@ -135,5 +139,5 @@ class ControlBox(_MineBox):
 
     def set_status(self, mine: Mine):
         if hasattr(self, 'Buttons'):
-            self.Buttons[self.index(mine)][-1].setText(['Activate', 'Pause'][mine.Paused])
+            self.Buttons[self.index(mine)][-2].setText(['Activate', 'Pause'][mine.Paused])
         mine.change_status()

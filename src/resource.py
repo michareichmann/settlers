@@ -4,7 +4,7 @@ from utils.helpers import isint
 
 
 def duration(t):
-    return timedelta(minutes=t) if t < 10 or not isint(t) else timedelta(seconds=t)
+    return timedelta(minutes=t) if t < 10 or type(t) is float or not isint(t) else timedelta(seconds=t)
 
 
 class Resource:

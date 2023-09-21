@@ -53,6 +53,14 @@ class _MineBox(GroupBox):
         for mine in self:
             self._add_mine(mine)
 
+    def reload_widgets(self):
+        self.remove_widgets()
+        self.create_widgets()
+
+    def remove_widgets(self):
+        for _ in self.range:
+            self._remove_mine()
+
     def _add_mine(self, mine: Mine):
         pass
 
@@ -121,16 +129,14 @@ class ControlBox(_MineBox):
 
     def add_mine(self, mine):
         self.Mines + mine
-        self._add_mine(mine)
-        self.adjust_height()
+        self.reload_widgets()
 
-    def _add_mine(self, mine: Mine, use_index=False):
-        i = self.index(mine) if use_index else self.Mines.size
-        self.Buttons.insert(i, [PicButton(mine.upgrade, Dir.joinpath('figures', 'upgrade.png'), align=CEN, xpos=self.ButtonPos[0]),
-                                button('Add', partial(self.add_deposit, mine), align=CEN, xpos=self.ButtonPos[1]),
-                                button(['Pause', 'Activate'][mine.Paused], partial(self.set_status, mine), size=55, align=CEN, xpos=self.ButtonPos[2]),
-                                PicButton(partial(self.delete_mine, mine), Dir.joinpath('figures', 'delete.png'), align=CEN, xpos=self.ButtonPos[3])])
-        self.LineEdits.insert(i, [line_edit(500, align=CEN, xpos=self.InputPos[0])])
+    def _add_mine(self, mine: Mine):
+        self.Buttons.append([PicButton(mine.upgrade, Dir.joinpath('figures', 'upgrade.png'), align=CEN, xpos=self.ButtonPos[0]),
+                             button('Add', partial(self.add_deposit, mine), align=CEN, xpos=self.ButtonPos[1]),
+                             button(['Pause', 'Activate'][mine.Paused], partial(self.set_status, mine), size=55, align=CEN, xpos=self.ButtonPos[2]),
+                             PicButton(partial(self.delete_mine, mine), Dir.joinpath('figures', 'delete.png'), align=CEN, xpos=self.ButtonPos[3])])
+        self.LineEdits.append([line_edit(500, align=CEN, xpos=self.InputPos[0])])
         for w in self.Buttons[-1] + self.LineEdits[-1]:
             self.Layout.addWidget(w, len(self.Buttons) + 1, w.XPos, w.Align)
 

@@ -24,7 +24,7 @@ class Gui(QMainWindow):
     BUTTON_HEIGHT = 50
     Version = 0.0
     Title = f'Settlers Online Gui V{Version}'
-    T_UPDATE = 1000
+    T_UPDATE = 500
 
     def __init__(self):
         super(Gui, self).__init__()

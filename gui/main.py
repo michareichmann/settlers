@@ -102,7 +102,7 @@ class Gui(QMainWindow):
             for k in range(pic_layout.count()):
                 w = pic_layout.itemAt(k).widget()
                 if w.Clicked:  # noqa
-                    self.ControlBox.add_mine(mine_from_str(w.PicName, deposit[1].text(), int(extra_time[1].text()), level[1].text(), paused[1].isChecked(), [2, 1][speed[1].isChecked()]))  # noqa
+                    self.ControlBox.add_mine(mine_from_str(w.PicName, deposit[1].text(), int(extra_time[1].text()), level[1].text(), paused[1].isChecked(), [1, 2][speed[1].isChecked()]))  # noqa
                     break
             print(self.Mines, self.MineBox.Mines)
             q.done(QDialog.Accepted)

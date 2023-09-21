@@ -22,11 +22,10 @@ class Mine:
         self.ExtraTime = duration(extra_time)
         self._ProdTime = resource.ProdTime if prod_time is None else duration(prod_time)
         self.Speed = speed
-        self.ProdTime = self._ProdTime * speed + self.ExtraTime
+        self.ProdTime = self._ProdTime / speed + self.ExtraTime
         self.Level = int(lvl)
         self.Paused = bool(paused)
 
-        self.T = now()
         self.LastProduced = now()
 
     def __str__(self):
@@ -39,17 +38,16 @@ class Mine:
         return other.Paused if self.Paused != other.Paused else self.time_left < other.time_left
 
     def update(self):
-        tdiff = now() - self.T
-        self.T += tdiff
+        tdiff = now() - self.LastProduced
         if not self.Paused:
             n_cycles = int(tdiff / self.ProdTime)
             if n_cycles > 0:
-                self.LastProduced = now()
+                self.LastProduced += n_cycles * self.ProdTime
                 self.Resource -= n_cycles * self.Level
 
     @property
     def time_left(self):
-        time_till_next_production = timedelta(0) if self.Paused else self.ProdTime - (self.T - self.LastProduced)
+        time_till_next_production = timedelta(0) if self.Paused else self.ProdTime - (now() - self.LastProduced)
         return np.ceil(self.Resource.N / self.Level) * self.ProdTime + time_till_next_production
 
     @property
@@ -59,7 +57,6 @@ class Mine:
     def extra_time(self, n):
         rest = self.Resource.N % self.Level
         cycles = int((rest + n) / self.Level)
-        print(rest, n, cycles)
         return cycles * self.ProdTime
 
     def set_lvl(self, lvl):

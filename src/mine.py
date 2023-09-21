@@ -27,6 +27,7 @@ class Mine:
         self.Paused = bool(paused)
 
         self.T = now()
+        self.LastProduced = now()
 
     def __str__(self):
         return f'{self.Resource} mine'
@@ -42,11 +43,14 @@ class Mine:
         self.T += tdiff
         if not self.Paused:
             n_cycles = int(tdiff / self.ProdTime)
-            self.Resource -= n_cycles * self.Level
+            if n_cycles > 0:
+                self.LastProduced = now()
+                self.Resource -= n_cycles * self.Level
 
     @property
     def time_left(self):
-        return np.ceil(self.Resource.N / self.Level) * self.ProdTime
+        time_till_next_production = timedelta(0) if self.Paused else self.ProdTime - (self.T - self.LastProduced)
+        return np.ceil(self.Resource.N / self.Level) * self.ProdTime + time_till_next_production
 
     @property
     def time_left_str(self):

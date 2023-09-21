@@ -78,6 +78,7 @@ class Gui(QMainWindow):
 
     def mine_dialogue(self):
         # todo: make into class
+        # todo: uncheck others if new mine was clicked
         q = QDialog()
         q.setWindowTitle('Add Mine')
 

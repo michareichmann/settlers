@@ -115,10 +115,10 @@ class Army:
 
 
 class OwnArmy(Army):
-    Units = [Recruit, Militia, Soldier, Cavalry, Bowman, LongBowman, General]
+    Units = [Recruit, Militia, Soldier, Cavalry, Bowman, Longbowman, Crossbowman, General]
 
-    def __init__(self, recruits=0, militia=0, soldiers=0, cavalry=0, bowmen=0, longbowmen=0):
-        super().__init__(recruits, militia, soldiers, cavalry, bowmen, longbowmen, 1)
+    def __init__(self, recruits=0, militia=0, soldiers=0, cavalry=0, bowmen=0, longbowmen=0, crossbowmen=0, general=1):
+        super().__init__(recruits, militia, soldiers, cavalry, bowmen, longbowmen, crossbowmen, general)
 
 
 class EnemyArmy(Army):
@@ -126,6 +126,24 @@ class EnemyArmy(Army):
 
     def __init__(self, scavengers=0, thugs=0, guard_dogs=0, roughnecks=0, stonethrowers=0, ranger=0):
         super().__init__(scavengers, thugs, guard_dogs, roughnecks, stonethrowers, ranger)
+
+    @property
+    def data(self):
+        return np.array([bat.NDefeated for bat in self])
+
+
+class DeserterArmy(Army):
+    Units = deepcopy([Recruit, Militia, Cavalry, Soldier, EliteSoldier, Bowman, Longbowman, Cannoneer])
+    Accuracy = [.6, .6, .6, .65, .7, .6, .6, .7]
+
+    def __init__(self, recruits=0, militia=0, cavalry=0, soldiers=0, elite_soldiers=0, bowmen=0, longbowmen=0, cannoneers=0):
+
+        self.set_accuracies()
+        super().__init__(recruits, militia, cavalry, soldiers, elite_soldiers, bowmen, longbowmen, cannoneers)
+
+    def set_accuracies(self):
+        for i, acc in enumerate(self.Accuracy):
+            self.Units[i].set_accuracy(acc)
 
     @property
     def data(self):

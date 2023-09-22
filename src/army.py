@@ -1,5 +1,6 @@
 from utils.helpers import *
 from src.units import *
+from src.battallion import Battalion
 
 Verbose = False
 
@@ -13,94 +14,6 @@ def set_verbose(status=ON):
     old_verbose = Verbose
     Verbose = status
     return old_verbose
-
-
-class Battalion:
-
-    def __init__(self, n: int, unit: Unit):
-
-        self.N = n
-        self.Unit = unit
-        self.Units = [deepcopy(unit) for _ in range(n)]
-        self.HP = np.sum([unit.HP for unit in self])
-
-        self.NAttacks = 0
-        self.NDefeated = 0
-        self.CurrentDmg = 1
-
-    def __repr__(self):
-        return f'{self.Unit.Name} Batallion ({self.alive_str})\n'
-
-    def __getitem__(self, item):
-        return self.Units[item]
-
-    @property
-    def alive_str(self):
-        return f'{self.n_alive}/{self.N}'
-
-    @property
-    def n_alive(self):
-        return np.count_nonzero([not u.Dead for u in self.Units])
-
-    @property
-    def can_attack(self):
-        return self.NAttacks + self.NDefeated < self.N and self.CurrentDmg > 0
-
-    @property
-    def dead(self):
-        return self.Units[-1].Dead
-
-    @property
-    def alive(self):
-        return not self.dead
-
-    @property
-    def next(self):
-        return next(unit for unit in self.Units if not unit.Dead)
-
-    @property
-    def dmg(self):
-        return sum(u.dmg for u in self)
-
-    def update_n_defeated(self):
-        self.NDefeated = self.N - self.n_alive
-        self.CurrentDmg = 1
-
-    def revive(self):
-        for unit in self.Units:
-            unit.revive()
-        self.NAttacks = 0
-        self.NDefeated = 0
-        self.CurrentDmg = 1
-
-    def reset_current_dmg(self):
-        if self.CurrentDmg == 1:
-            self.CurrentDmg = self.dmg
-
-    def normal_attack(self, battalion: 'Battalion'):
-        for unit in self.Units[self.NAttacks + self.NDefeated:]:
-            try:
-                unit.attack(battalion.next)
-                self.NAttacks += 1
-            except StopIteration:
-                break
-
-    def splash_attack(self, battalion: 'Battalion'):
-        for unit in self.Units[self.NAttacks + self.NDefeated:]:
-            try:
-                self.reset_current_dmg()
-                while self.CurrentDmg > 0:
-                    enemy = battalion.next
-                    self.CurrentDmg = unit.attack(enemy, self.CurrentDmg)  # returns remaining dmg
-            except StopIteration:
-                break
-
-    def attack(self, battalion: 'Battalion'):
-        if battalion is not None:
-            n0, n1 = self.N - self.NAttacks - self.NDefeated, battalion.n_alive
-            splash = np.random.random() < self.Unit.Splash if 0 < self.Unit.Splash < 1 else self.Unit.Splash
-            self.splash_attack(battalion) if splash else self.normal_attack(battalion)
-            info(f'{n0} {self.Unit.Name} killed {n1 - battalion.n_alive} {battalion.Unit.Name} ({battalion.alive_str})', prnt=Verbose)
 
 
 class Army:

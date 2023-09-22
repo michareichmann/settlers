@@ -1,6 +1,6 @@
 from utils.helpers import *
 from src.units import *
-from src.battallion import Battalion
+from src.battalion import Battalion
 
 Verbose = False
 
@@ -92,21 +92,21 @@ class Army:
         for bat in self:
             bat.update_n_defeated()
 
-    def _attack(self, army: 'Army', speed):
+    def _attack(self, army: 'Army', speed, prnt=False):
         for bat in self.speed_batallions(speed):
             indices = iter(army.indices(bat.Unit.Flanking))
             while bat.can_attack and not army.defeated:
-                bat.attack(army[next(indices)])
+                (bat.print_attack if prnt else bat._attack)(army[next(indices)])
             bat.NAttacks = 0
 
-    def attack(self, army: 'Army'):
+    def attack(self, army: 'Army', prnt=False):
         while not self.defeated and not army.defeated:
             print_banner(f'ROUND {self.NRounds}', color='yellow', prnt=Verbose)
             for speed in [s for s in [2, 1, 0] if self.has_speed_units(s) or army.has_speed_units(s)]:
                 print_small_banner(f'{SpeedDict[speed]} units', color='yellow', prnt=Verbose)
-                self._attack(army, speed)  # bath attacks happen in parallel
+                self._attack(army, speed, prnt)  # bath attacks happen in parallel
                 info('Enemy attacking!', color='red', blank_lines=1, prnt=Verbose)
-                army._attack(self, speed)
+                army._attack(self, speed, prnt)
                 self.update_n_defeated()
                 army.update_n_defeated()
             self.NRounds += 1

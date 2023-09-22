@@ -104,7 +104,6 @@ class Battalion:
         p = self.Unit.Accuracy
         r = rnd.random(n * s)
         kills = rnd.random(n * s) < 1 - p + p * p
-        # return kills
         kills[::n] = r[::n] < p
         kills = np.array_split(kills, s)
         n_kills = np.sum(kills, axis=1)

@@ -139,13 +139,17 @@ class PicButton(QAbstractButton):
 
 class PicButOpacity(PicButton):
 
-    def __init__(self, f, pic: Path, opacity=.5, align: Qt.AlignmentFlag = CEN, xpos: int = 0, parent=None):
+    def __init__(self, f, pic: Path, opacity=.5, align: Qt.AlignmentFlag = CEN, xpos: int = 0, fr=None, parent=None):
 
-        super().__init__(f, pic, pic, pic, self.set_checked, align, xpos, parent)
+        super().__init__(f, pic, pic, pic, fr, align, xpos, parent)
         self.Opacity = opacity
         self.Clicked = False
 
-    def set_checked(self):
+    def set_clicked(self, status: bool):
+        self.Clicked = status
+        self.update()
+
+    def flick(self):
         self.Clicked = not self.Clicked
 
     def paint(self, p: QPainter):

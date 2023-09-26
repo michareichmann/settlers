@@ -8,12 +8,12 @@
 import sys
 
 from PyQt5.QtCore import QTimer
-from PyQt5.QtGui import QFont, QCursor
-from PyQt5.QtWidgets import QMainWindow, QAction, QFontDialog, QWidget, QDialog, QVBoxLayout, QHBoxLayout, QGridLayout
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QMainWindow, QAction, QFontDialog, QWidget, QVBoxLayout, QHBoxLayout
 
-from gui.mine_box import MineBox, ControlBox
+from gui.mine_box import MineBox, ControlBox, MineDialogue
 from gui.utils import *
-from src.mine import Mines, mine_from_str
+from src.mine import Mines
 from utils.helpers import Dir, info
 
 
@@ -77,45 +77,8 @@ class Gui(QMainWindow):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
     def mine_dialogue(self):
-        # todo: make into class
-        # todo: uncheck others if new mine was clicked
-        q = QDialog()
-        q.setWindowTitle('Add Mine')
-
-        main_layout = QVBoxLayout()
-        pic_layout = QHBoxLayout()
-        for i, pic in enumerate([Dir.joinpath('figures', f'{name}-mine.png') for name in ['cop', 'iro', 'coa', 'gol']]):
-            pic_layout.addWidget(PicButOpacity(do_nothing, pic), alignment=CEN)
-
-        value_layout = QGridLayout()
-        value_layout.setContentsMargins(4, 4, 4, 4)
-        extra_time = [(label('Extra Time:')), line_edit(10), label('s')]
-        deposit = [label('Deposit:'), line_edit(500)]
-        level = [label('Level:'), line_edit(1)]
-        paused = [label('Paused:'), check_box()]
-        speed = [label('Double speed:'), check_box()]
-        align = [RIGHT, CEN, LEFT]
-        for i, row in enumerate([extra_time, deposit, level, paused, speed]):
-            for j, widget in enumerate(row):
-                value_layout.addWidget(widget, i, j, align[j])
-
-        def done():
-            for k in range(pic_layout.count()):
-                w = pic_layout.itemAt(k).widget()
-                if w.Clicked:  # noqa
-                    self.ControlBox.add_mine(mine_from_str(w.PicName, deposit[1].text(), int(extra_time[1].text()), level[1].text(), paused[1].isChecked(), [1, 2][speed[1].isChecked()]))  # noqa
-                    break
-            print(self.Mines, self.MineBox.Mines)
-            q.done(QDialog.Accepted)
-
-        main_layout.addLayout(pic_layout)
-        main_layout.addLayout(value_layout)
-        main_layout.addWidget(button('Confirm', done))
-
-        q.setLayout(main_layout)
-        q.move(QCursor.pos())
-        if q.exec() == QDialog.Accepted:
-            return
+        m = MineDialogue(self.ControlBox)
+        m.run()
 
 
 class MenuBar(object):

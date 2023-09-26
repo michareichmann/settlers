@@ -1,10 +1,13 @@
-from PyQt5.QtWidgets import QGridLayout
 from functools import partial
+
+import numpy as np
+from PyQt5.QtGui import QCursor
+from PyQt5.QtWidgets import QGridLayout, QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QLayout
 
 from gui.group_box import GroupBox
 from gui.utils import *
-from src.mine import Mines, Mine
-from utils.helpers import Dir
+from src.mine import Mines, Mine, mine_from_str, mine_classes
+from utils.helpers import Dir, warning
 
 
 class _MineBox(GroupBox):
@@ -147,3 +150,90 @@ class ControlBox(_MineBox):
         if hasattr(self, 'Buttons'):
             self.Buttons[self.index(mine)][-2].setText(['Activate', 'Pause'][mine.Paused])
         mine.change_status()
+
+
+# todo: play sound when mine is going down
+
+class MineDialogue(QDialog):
+
+    FigPath = Dir.joinpath('figures')
+
+    def __init__(self, control_box: ControlBox):
+        super().__init__()
+
+        self.setWindowTitle('Add Mine')
+
+        self.ControlBox = control_box
+
+        # Mine figures for selection
+        self.PicLayout = self.create_pic_layout()
+        self.Mines = [cls(0, 0) for cls in mine_classes()]
+
+        # Value selection
+        self.ValueLayout = self.create_value_layout()
+
+        self.Layout = self.create_layout()
+
+    @staticmethod
+    def get_widgets(layout: QLayout):
+        return np.array([layout.itemAt(i).widget() for i in range(layout.count())])
+
+    @property
+    def values(self):
+        w = self.get_widgets(self.ValueLayout)[1::2]  # there is always a pair of label and widget
+        return w[1].text(), int(w[0].text()), w[2].text(), w[3].isChecked(), [1, 2][w[4].isChecked()]  # noqa
+
+    def set_default_values(self, mine):
+        ws = self.get_widgets(self.ValueLayout)
+        ws[3].setText(str(mine.DefaultDeposit))
+        ws[5].setText(str(mine.DefaultLevel))
+
+    def select_mine(self, i):
+        buttons = self.get_widgets(self.PicLayout)
+        for but in buttons:
+            but.set_clicked(False)
+        buttons[i].set_clicked(True)
+        self.set_default_values(self.Mines[i])
+
+    def confirm(self):
+        for w in self.get_widgets(self.PicLayout):
+            if w.Clicked:
+                self.ControlBox.add_mine(mine_from_str(w.PicName, *self.values))
+                self.done(QDialog.Accepted)
+        warning('No mine was selected')
+
+    def run(self):
+        self.move(QCursor.pos())
+        if self.exec() == QDialog.Accepted:
+            return
+
+    # ----------------------------------------
+    # region LAYOUT
+    def create_pic_layout(self):
+        layout = QHBoxLayout()
+        for but in [PicButOpacity(partial(self.select_mine, i), pic) for i, pic in enumerate([MineDialogue.FigPath.joinpath(f'{m}-mine.png') for m in ['cop', 'iro', 'coa', 'gol']])]:
+            layout.addWidget(but, alignment=CEN)
+        return layout
+
+    @staticmethod
+    def create_value_layout():
+        layout = QFormLayout()
+        layout.setFormAlignment(CEN | Qt.AlignTop)
+        layout.setLabelAlignment(RIGHT)
+
+        labels = ['Extra Time [s]:', 'Deposit:', 'Level:', 'Paused:', 'Double speed:']
+        widgets = [line_edit(16, 50), line_edit(500, 50), line_edit(1, 50), check_box(), check_box()]
+        for lbl, w in zip(labels, widgets):
+            layout.addRow(lbl, w)
+        return layout
+
+    def create_layout(self):
+        layout = QVBoxLayout()
+        layout.addLayout(self.PicLayout)
+        layout.addLayout(self.ValueLayout)
+        layout.addWidget(button('Confirm', self.confirm))
+        self.setLayout(layout)
+        return layout
+    # endregion LAYOUT
+    # ----------------------------------------
+

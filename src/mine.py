@@ -91,6 +91,9 @@ class Mines:
     DataDir = Dir.joinpath('data')
     FileName = DataDir.joinpath('mines.pickle')
 
+    DefaultDeposit = 0
+    DefaultLevel = 0
+
     def __init__(self):
         self.L = self.load()
 
@@ -142,11 +145,17 @@ class Mines:
 
 class CoalMine(Mine):
 
+    DefaultDeposit = 2900
+    DefaultLevel = 1
+
     def __init__(self, dep_size, extra_time, lvl=1, paused=False, speed=1):
         super().__init__(Coal, dep_size, extra_time, prod_time=90, lvl=lvl, paused=paused, speed=speed)
 
 
 class CopperMine(Mine):
+
+    DefaultDeposit = 820
+    DefaultLevel = 2
 
     def __init__(self, dep_size, extra_time, lvl=1, paused=False, speed=1):
         super().__init__(CopperOre, dep_size, extra_time, lvl=lvl, paused=paused, speed=speed)
@@ -154,18 +163,27 @@ class CopperMine(Mine):
 
 class IronMine(Mine):
 
+    DefaultDeposit = 550
+    DefaultLevel = 2
+
     def __init__(self, dep_size, extra_time, lvl=1, paused=False, speed=1):
         super().__init__(IronOre, dep_size, extra_time, lvl=lvl, paused=paused, speed=speed)
 
 
 class GoldMine(Mine):
 
+    DefaultDeposit = 300
+    DefaultLevel = 1
+
     def __init__(self, dep_size, extra_time, lvl=1, paused=False, speed=1):
         super().__init__(GoldOre, dep_size, extra_time, lvl=lvl, paused=paused, speed=speed)
 
 
+def mine_classes():
+    return [CopperMine, IronMine, CoalMine, GoldMine]
+
+
 def mine_from_str(s, dep_size, extra_time, lvl=1, paused=False, speed=1):
-    classes = [CopperMine, IronMine, CoalMine, GoldMine]
-    return next(cls(dep_size, extra_time, lvl, paused, speed) for cls in classes if s.split('-')[0].lower() in cls.__name__.lower())
+    return next(cls(dep_size, extra_time, lvl, paused, speed) for cls in mine_classes() if s.split('-')[0].lower() in cls.__name__.lower())
 
 

@@ -1,8 +1,10 @@
-from PyQt5.QtWidgets import QLabel, QLineEdit, QPushButton, QSpinBox, QComboBox, QCheckBox, QPlainTextEdit, QAbstractButton
+from functools import partial
+
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QPainter, QIcon, QPixmap
-from plotting.utils import do, do_nothing, Path, choose
+from PyQt5.QtWidgets import QLabel, QLineEdit, QPushButton, QSpinBox, QComboBox, QCheckBox, QPlainTextEdit, QAbstractButton
 
+from plotting.utils import do, do_nothing, Path, choose
 
 FontSize = 13
 ButtonHeight = 50
@@ -135,6 +137,52 @@ class PicButton(QAbstractButton):
 
     def sizeHint(self):
         return QSize(18, 18)
+
+
+class OnOffButton(QAbstractButton):
+    def __init__(self, f, pic_on: Path, pic_off: Path = None, fr=None, align: Qt.AlignmentFlag = CEN, xpos: int = 0, opacity=.8, parent=None):
+        super(OnOffButton, self).__init__(parent)
+
+        self.Opacity = opacity
+        self.PixMapOn = pix_map(pic_on)
+        self.PixMapOff = pix_map(pic_off)
+
+        self.Align = align
+        self.XPos = xpos
+        self.Clicked = False
+
+        self.pressed.connect(partial(self.flick, f))  # noqa
+        self.released.connect(self.update if fr is None else fr)  # noqa
+
+    def __getitem__(self, item):
+        return [self, self.Align, self.XPos][item]
+
+    def flick(self, f):
+        self.Clicked = not self.Clicked
+        f()
+
+    def paint(self, p: QPainter):
+        if self.underMouse() and not self.isDown():
+            p.setOpacity(self.Opacity)
+
+    def paintEvent(self, event):
+        pix = self.PixMapOn if self.Clicked else self.PixMapOff
+
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
+        painter.setRenderHint(QPainter.LosslessImageRendering, True)
+        self.paint(painter)
+        painter.drawPixmap(event.rect(), pix, pix.rect())
+
+    def enterEvent(self, event):
+        self.update()
+
+    def leaveEvent(self, event):
+        self.update()
+
+    def sizeHint(self):
+        return QSize(47, 22)
 
 
 class PicButOpacity(PicButton):

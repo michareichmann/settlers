@@ -9,11 +9,11 @@ import sys
 
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QMainWindow, QAction, QFontDialog, QWidget, QVBoxLayout, QHBoxLayout
+from PyQt5.QtWidgets import QMainWindow, QAction, QFontDialog, QWidget, QVBoxLayout
 
-from gui.mine_box import MineBox, ControlBox, MineDialogue
+from gui.mine_box import MineBox
 from gui.utils import *
-from src.mine import Mines
+from src.mine import *
 from utils.helpers import Dir, info
 
 
@@ -32,16 +32,12 @@ class Gui(QMainWindow):
         self.Layout = self.create_layout()
 
         # SUBLAYOUTS
-        self.Mines = Mines()
-        self.MineBox = MineBox(self.Mines)
-        self.ControlBox = ControlBox(self.Mines)
+        self.MineBoxes = self.create_boxes()
         self.MenuBar = MenuBar(self, True)
-        self.create_boxes()
 
-        self.Layout.addStretch()
+        # self.Layout.addStretch()
 
         self.Timer = self.create_timer()
-
         self.show()
 
     def create_layout(self) -> QVBoxLayout:
@@ -52,10 +48,12 @@ class Gui(QMainWindow):
         return layout  # noqa
 
     def create_boxes(self):
-        layout = QHBoxLayout()
-        layout.addWidget(self.MineBox)
-        layout.addWidget(self.ControlBox)
+        boxes = [MineBox(cls) for cls in MineClasses]
+        layout = QVBoxLayout()
+        for box in boxes:
+            layout.addWidget(box)
         self.Layout.addLayout(layout)
+        return boxes
 
     def create_timer(self) -> QTimer:
         t = QTimer()
@@ -64,21 +62,19 @@ class Gui(QMainWindow):
         return t
 
     def closeEvent(self, event):
-        self.MineBox.Mines.save()
+        for box in self.MineBoxes:
+            box.Mines.save()
         self.MenuBar.close_app()
 
     def update(self):
-        self.MineBox.update()
+        for box in self.MineBoxes:
+            box.update()
 
     def configure(self):
         self.setGeometry(1000, 500, Gui.Width, Gui.Height)
         self.setWindowTitle(Gui.Title)
         self.setWindowIcon(QIcon(str(Dir.joinpath('figures', 'favicon.ico'))))
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
-
-    def mine_dialogue(self):
-        m = MineDialogue(self.ControlBox)
-        m.run()
 
 
 class MenuBar(object):
@@ -92,7 +88,7 @@ class MenuBar(object):
         self.add_menu('File')
         self.add_menu_entry('File', 'Exit', 'Ctrl+Q', self.close_app, 'Close the Application')
         self.add_menu_entry('File', 'Font', 'Ctrl+F', self.font_choice, 'Open font dialog')
-        self.add_menu_entry('File', 'Add Mine', 'Ctrl+M', self.Window.mine_dialogue, 'Add new mine')
+        self.add_menu_entry('File', 'Add Mine', 'Ctrl+M', do_nothing, 'Add new mine')
 
     def add_menu(self, name):
         self.Window.statusBar()

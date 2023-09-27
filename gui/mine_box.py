@@ -1,11 +1,14 @@
-from PyQt5.QtWidgets import QGridLayout
+from PyQt5.QtWidgets import QGridLayout, QInputDialog
 
 from gui.group_box import GroupBox
 from gui.utils import *
 from src.mine import Mines, Mine
 from utils.classes import Config
-from utils.helpers import Dir, is_iter
+from utils.helpers import Dir
 
+
+# todo: fix pause timing
+# todo: change default in the menu
 
 class MineBox(GroupBox):
 
@@ -24,6 +27,7 @@ class MineBox(GroupBox):
         super().__init__()
 
         self.Layout = self.create_layout()
+        self.Speed: QCheckBox = check_box()
         self.create_header()
         self.create_labels()
         self.create_buttons()
@@ -41,7 +45,7 @@ class MineBox(GroupBox):
         MineBox.Config.set_section(str(self.MineCls.Resource))
         t = MineBox.Config.get_value('extra time')
         d = MineBox.Config.get_value('deposit')
-        d = d if is_iter(int(d)) else ([int(d)] * len(t))
+        d = ([int(d)] * len(t)) if type(d) is str else d
         lvl = MineBox.Config.get_value('level', default=1)
         return [(i, j, lvl) for i, j in zip(d, t)]
 
@@ -49,6 +53,7 @@ class MineBox(GroupBox):
         i = self.index(mine)
         mine.set_lvl(self.DefaultValues[i][2])
         mine.set_deposit(self.DefaultValues[i][0])
+        mine.set_double_speed(self.Speed.isChecked())
 
     def load_mines(self):
         m = Mines(self.MineCls.__name__)
@@ -75,6 +80,12 @@ class MineBox(GroupBox):
         i = -1 if mine is None else self.index(mine)
         return sum([con.pop(i) for con in self.used_containers], start=[])
 
+    def set_deposit(self, mine):
+        value, ok = QInputDialog().getInt(self, 'Change Deposit', 'Value:', QLineEdit.Normal)
+        if ok and value:
+            mine.set_deposit(value)
+            mine.set_double_speed(self.Speed.isChecked())
+
     # ----------------------------------
     # region LAYOUT & WIDGETS
     def create_layout(self) -> QGridLayout:
@@ -85,6 +96,9 @@ class MineBox(GroupBox):
     def create_header(self):
         for i, name in enumerate(MineBox.Header):
             self.Layout.addWidget(label(name, bold=True), 0, i, CEN)
+        i = len(self.Header)
+        self.Layout.addWidget(label('double speed:'), 0, i, 1, 2, RIGHT)
+        self.Layout.addWidget(self.Speed, 0, i + 2, LEFT)
 
     def create_labels(self):
         align = [CEN, CEN, RIGHT, RIGHT, CEN]
@@ -95,11 +109,12 @@ class MineBox(GroupBox):
                 self.Layout.addWidget(lbl, i, lbl.XPos, lbl.Align)
 
     def create_buttons(self):
-        pos = [4, 5, 6]
+        pos = range(4, 8)
         for i, mine in enumerate(self.Mines, 1):
             self.Buttons.append([OnOffButton(mine.change_status, mine.Paused, self.FigPath.joinpath('on.png'), self.FigPath.joinpath('off.png'), align=CEN, xpos=pos[0]),
                                  PicButton(mine.upgrade, self.FigPath.joinpath('upgrade.png'), align=CEN, xpos=pos[1]),
-                                 PicButton(partial(self.reload, mine), Dir.joinpath('figures', 'reload.png'), align=CEN, xpos=pos[2])])
+                                 button('Set', partial(self.set_deposit, mine), size=40, align=CEN, xpos=pos[2]),
+                                 PicButton(partial(self.reload, mine), Dir.joinpath('figures', 'reload.png'), align=CEN, xpos=pos[3])])
             for w in self.Buttons[-1]:
                 self.Layout.addWidget(w, i, w.XPos, w.Align)
 

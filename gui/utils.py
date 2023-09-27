@@ -140,7 +140,7 @@ class PicButton(QAbstractButton):
 
 
 class OnOffButton(QAbstractButton):
-    def __init__(self, f, pic_on: Path, pic_off: Path = None, fr=None, align: Qt.AlignmentFlag = CEN, xpos: int = 0, opacity=.8, parent=None):
+    def __init__(self, f, off, pic_on: Path, pic_off: Path = None, fr=None, align: Qt.AlignmentFlag = CEN, xpos: int = 0, opacity=.8, parent=None):
         super(OnOffButton, self).__init__(parent)
 
         self.Opacity = opacity
@@ -149,7 +149,7 @@ class OnOffButton(QAbstractButton):
 
         self.Align = align
         self.XPos = xpos
-        self.Clicked = False
+        self.Clicked = not off
 
         self.pressed.connect(partial(self.flick, f))  # noqa
         self.released.connect(self.update if fr is None else fr)  # noqa

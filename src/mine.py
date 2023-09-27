@@ -78,6 +78,9 @@ class Mine:
     def upgrade(self):
         self.set_lvl(self.Level + 1)
 
+    def set_double_speed(self, status: bool):
+        self.ProdTime = self._ProdTime / (self.Speed * [1, 2][status]) + self.ExtraTime
+
     def set_deposit(self, s):
         self.Deposit = s
 

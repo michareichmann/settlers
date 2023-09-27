@@ -9,9 +9,9 @@ extra time = [28, 36, 20, 16]
 level = 2
 
 [Coal]
-deposit = 2900
-extra time = [40, 16, 48]
+deposit = [2900, 2900, 3000, 3000]
+extra time = [16, 32, 20, 16]
 
 [Gold Ore]
 deposit = 300
-extra time = [16, 24]
+extra time = [20, 24]

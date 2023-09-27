@@ -119,7 +119,6 @@ class Mines:
 
     def __add__(self, other: Mine):
         self.L.append(other)
-        self.L = sorted(self.L)
         self.save()
 
     def __iter__(self):
@@ -189,11 +188,10 @@ class GoldMine(Mine):
     Resource = GoldOre
 
 
-def mine_classes():
-    return [CopperMine, IronMine, CoalMine, GoldMine]
+MineClasses = [CopperMine, IronMine, CoalMine, GoldMine]
 
 
 def mine_from_str(s, dep_size, extra_time, lvl=1, speed=1, paused=False):
-    return next(cls(dep_size, extra_time, lvl, speed, paused) for cls in mine_classes() if s.split('-')[0].lower() in cls.__name__.lower())
+    return next(cls(dep_size, extra_time, lvl, speed, paused) for cls in MineClasses if s.split('-')[0].lower() in cls.__name__.lower())
 
 

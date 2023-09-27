@@ -6,7 +6,7 @@ from typing import List
 import numpy as np
 
 from src.resource import *
-from utils.helpers import Dir, load_pickle, print_table, info
+from utils.helpers import Dir, load_pickle, print_table, info, say
 
 
 def now():
@@ -15,18 +15,22 @@ def now():
 
 class Mine:
 
-    def __init__(self, resource: Resource, dep_size: int, extra_time, prod_time=None, lvl=1, paused=False, speed=1):
+    Resource: Resource = None
+
+    def __init__(self, dep_size: int, extra_time, lvl=1, speed=1, paused=False):
 
         # FEATURES
-        self.Resource = resource * int(dep_size)
+        self.Deposit = dep_size
         self.ExtraTime = duration(extra_time)
-        self._ProdTime = resource.ProdTime if prod_time is None else duration(prod_time)
+        self._ProdTime = self.Resource.ProdTime
         self.Speed = speed
         self.ProdTime = self._ProdTime / speed + self.ExtraTime
         self.Level = int(lvl)
         self.Paused = bool(paused)
 
         self.LastProduced = now()
+
+        self.Warnings = {t: True for t in [60, 30, 10, 1, 0]}
 
     def __str__(self):
         return f'{self.Resource} mine'
@@ -43,19 +47,28 @@ class Mine:
             n_cycles = int(tdiff / self.ProdTime)
             if n_cycles > 0:
                 self.LastProduced += n_cycles * self.ProdTime
-                self.Resource -= n_cycles * self.Level
+                self.Deposit -= n_cycles * self.Level
+        self.warn()
+
+    def warn(self):
+        t0 = self.time_left
+        for t, b in self.Warnings.items():
+            if t0.total_seconds() < t * 60 and b:
+                say(f'{t} min left for {self}' if t > 0 else f'Your {self} was destroyed')
+                self.Warnings[t] = False
 
     @property
     def time_left(self):
         time_till_next_production = timedelta(0) if self.Paused else self.ProdTime - (now() - self.LastProduced)
-        return np.ceil(self.Resource.N / self.Level) * self.ProdTime + time_till_next_production
+        return np.ceil(self.Deposit / self.Level) * self.ProdTime + time_till_next_production
 
     @property
     def time_left_str(self):
-        return f'({self.time_left})' if self.Paused else str(self.time_left)
+        t = self.time_left
+        return f'({t})' if self.Paused else str(t) if t.total_seconds() > 0 else 'Destroyed'
     
     def extra_time(self, n):
-        rest = self.Resource.N % self.Level
+        rest = self.Deposit % self.Level
         cycles = int((rest + n) / self.Level)
         return cycles * self.ProdTime
 
@@ -66,11 +79,10 @@ class Mine:
         self.set_lvl(self.Level + 1)
 
     def set_deposit(self, s):
-        self.T = now()
-        self.Resource.update(s)
+        self.Deposit = s
 
     def add_deposit(self, n):
-        self.Resource += n
+        self.Deposit += n
         info(f'You added {self.extra_time(n)} of life time')
 
     def set_status(self, status: bool):
@@ -82,19 +94,20 @@ class Mine:
         self.set_status(not self.Paused)
 
     @property
+    def status(self):
+        return ['ON', 'OFF'][self.Paused]
+
+    @property
     def data(self):
-        return [self.Resource, self.Level, self.Resource.N, self.time_left_str, ['ON', 'OFF'][self.Paused]]
+        return [self.Level, self.Deposit, self.time_left_str]
 
 
 class Mines:
 
     DataDir = Dir.joinpath('data')
-    FileName = DataDir.joinpath('mines.pickle')
 
-    DefaultDeposit = 0
-    DefaultLevel = 0
-
-    def __init__(self):
+    def __init__(self, file_name):
+        self.FileName = Mines.DataDir.joinpath(f'{file_name}.pickle')
         self.L = self.load()
 
     def __getitem__(self, item):
@@ -109,21 +122,34 @@ class Mines:
         self.L = sorted(self.L)
         self.save()
 
+    def __iter__(self):
+        return iter(self.L)
+
     @property
     def size(self):
         return len(self.L)
 
-    @staticmethod
-    def load() -> List:
-        return load_pickle(Mines.FileName) if Mines.FileName.exists() else []
+    def load(self) -> List:
+        return load_pickle(self.FileName) if self.FileName.exists() else []
 
     def save(self):
         with open(self.FileName, 'wb') as f:
-            pickle.dump(sorted(self.L), f)
+            pickle.dump(self.L, f)
+
+    def clear(self):
+        self.L = []
+        self.save()
 
     def reload(self):
         self.save()
         self.L = self.load()
+
+    def reload_classes(self):
+        for mine in self:
+            for k, v in mine.__class__(0, 0).__dict__.items():
+                if k not in mine.__dict__:
+                    mine.__dict__[k] = v
+            mine.__class__ = eval(mine.__class__.__name__)
 
     def register(self, mine: Mine):
         self.L.append(mine)
@@ -136,54 +162,38 @@ class Mines:
             mine.update()
 
     def print(self):
-        rows = [[i, m.Resource, m.Level, m.Resource.N, str(m.time_left)] for i, m in enumerate(self.L)]
+        rows = [[i, m.Resource, m.Level, m.Deposit, str(m.time_left)] for i, m in enumerate(self.L)]
         print_table(rows, header=['Index', 'Type', 'Lvl', 'Deposit', 'Time left'])
 
     def add_deposit(self, i, n):
         self[i].add_deposit(n)
 
 
+class CopperMine(Mine):
+    Resource = CopperOre
+
+
 class CoalMine(Mine):
 
-    DefaultDeposit = 2900
-    DefaultLevel = 1
+    Resource = Coal
 
-    def __init__(self, dep_size, extra_time, lvl=1, paused=False, speed=1):
-        super().__init__(Coal, dep_size, extra_time, prod_time=90, lvl=lvl, paused=paused, speed=speed)
-
-
-class CopperMine(Mine):
-
-    DefaultDeposit = 820
-    DefaultLevel = 2
-
-    def __init__(self, dep_size, extra_time, lvl=1, paused=False, speed=1):
-        super().__init__(CopperOre, dep_size, extra_time, lvl=lvl, paused=paused, speed=speed)
+    def __init__(self, dep_size, extra_time, lvl=1, speed=1, paused=False):
+        super().__init__(dep_size, extra_time, lvl, speed * 2, paused)
 
 
 class IronMine(Mine):
-
-    DefaultDeposit = 550
-    DefaultLevel = 2
-
-    def __init__(self, dep_size, extra_time, lvl=1, paused=False, speed=1):
-        super().__init__(IronOre, dep_size, extra_time, lvl=lvl, paused=paused, speed=speed)
+    Resource = IronOre
 
 
 class GoldMine(Mine):
-
-    DefaultDeposit = 300
-    DefaultLevel = 1
-
-    def __init__(self, dep_size, extra_time, lvl=1, paused=False, speed=1):
-        super().__init__(GoldOre, dep_size, extra_time, lvl=lvl, paused=paused, speed=speed)
+    Resource = GoldOre
 
 
 def mine_classes():
     return [CopperMine, IronMine, CoalMine, GoldMine]
 
 
-def mine_from_str(s, dep_size, extra_time, lvl=1, paused=False, speed=1):
-    return next(cls(dep_size, extra_time, lvl, paused, speed) for cls in mine_classes() if s.split('-')[0].lower() in cls.__name__.lower())
+def mine_from_str(s, dep_size, extra_time, lvl=1, speed=1, paused=False):
+    return next(cls(dep_size, extra_time, lvl, speed, paused) for cls in mine_classes() if s.split('-')[0].lower() in cls.__name__.lower())
 
 

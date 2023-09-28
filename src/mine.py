@@ -30,7 +30,7 @@ class Mine:
 
         self.LastProduced = now()
 
-        self.Warnings = {t: True for t in [60, 30, 10, 1, 0]}
+        self.Warnings = {t: True for t in [30, 0]}
 
     def __str__(self):
         return f'{self.Resource} mine'
@@ -51,9 +51,9 @@ class Mine:
         self.warn()
 
     def warn(self):
-        t0 = self.time_left
+        t0 = self.time_left.total_seconds()
         for t, b in self.Warnings.items():
-            if t0.total_seconds() < t * 60 and b:
+            if (t - 5) * 60 < t0 < t * 60 and b:
                 say(f'{t} min left for {self}' if t > 0 else f'Your {self} was destroyed')
                 self.Warnings[t] = False
 

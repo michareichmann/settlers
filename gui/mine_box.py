@@ -7,9 +7,6 @@ from utils.classes import Config
 from utils.helpers import Dir
 
 
-# todo: fix pause timing
-# todo: change default in the menu
-
 class MineBox(GroupBox):
 
     Config = Config(Dir.joinpath('config', 'mines.ini'))

@@ -12,6 +12,7 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QMainWindow, QAction, QFontDialog, QWidget, QVBoxLayout
 
 from gui.mine_box import MineBox
+from gui.mine_dialogue import MineDialogue
 from gui.utils import *
 from src.mine import *
 from utils.helpers import Dir, info
@@ -33,9 +34,10 @@ class Gui(QMainWindow):
 
         # SUBLAYOUTS
         self.MineBoxes = self.create_boxes()
+        self.MineDialogue = MineDialogue(self.MineBoxes)
         self.MenuBar = MenuBar(self, True)
 
-        # self.Layout.addStretch()
+        self.adjustSize()
 
         self.Timer = self.create_timer()
         self.show()
@@ -78,7 +80,7 @@ class Gui(QMainWindow):
 
 
 class MenuBar(object):
-    def __init__(self, gui, display=False):
+    def __init__(self, gui: Gui, display=False):
         self.Window = gui
         self.Menus = {}
         self.Display = display
@@ -88,7 +90,7 @@ class MenuBar(object):
         self.add_menu('File')
         self.add_menu_entry('File', 'Exit', 'Ctrl+Q', self.close_app, 'Close the Application')
         self.add_menu_entry('File', 'Font', 'Ctrl+F', self.font_choice, 'Open font dialog')
-        self.add_menu_entry('File', 'Add Mine', 'Ctrl+M', do_nothing, 'Add new mine')
+        self.add_menu_entry('File', 'Add Mine', 'Ctrl+M', self.Window.MineDialogue.run, 'Add new mine')
 
     def add_menu(self, name):
         self.Window.statusBar()
@@ -105,11 +107,12 @@ class MenuBar(object):
     def font_choice(self):
         font, valid = QFontDialog.getFont(self.Window)
         if valid:
-            for box in self.Window.DeviceBoxes:
+            for box in self.Window.MineBoxes:
                 header_font = QFont(font)
-                header_font.setPointSize(font.pointSize() * 1.4)
+                header_font.setPointSize(int(font.pointSize() * 1.2))
                 box.setFont(header_font)
-                box.set_fonts(font)
+                box.adjustSize()
+                # box.set_fonts(font)
 
     @staticmethod
     def close_app():

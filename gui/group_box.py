@@ -1,5 +1,5 @@
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QGroupBox
+from PyQt5.QtWidgets import QGroupBox, QLayout
 from gui.utils import format_widget
 
 
@@ -12,6 +12,7 @@ class GroupBox(QGroupBox):
         super(GroupBox, self).__init__()
 
         self.Widgets, self.Labels, self.Buttons, self.LineEdits = [], [], [], []
+        self.Layout: QLayout | None = None
         self.configure()
 
     @property
@@ -31,5 +32,12 @@ class GroupBox(QGroupBox):
 
     def make(self):
         pass
+
+    def remove_widgets(self):
+        ws = [self.Layout.itemAt(i).widget() for i in range(self.Layout.count())]
+        for w in ws:
+            self.Layout.removeWidget(w)
+            w.deleteLater()
+        self.Widgets, self.Labels, self.Buttons, self.LineEdits = [], [], [], []
 
 

@@ -27,6 +27,7 @@ class Mine:
         self.ProdTime = self._ProdTime / speed + self.ExtraTime
         self.Level = int(lvl)
         self.Paused = bool(paused)
+        self.Position = None
 
         self.LastProduced = now()
 
@@ -58,7 +59,8 @@ class Mine:
         t0 = self.time_left.total_seconds()
         for t, b in self.Warnings.items():
             if (t - 5) * 60 < t0 < t * 60 and b:
-                say(f'{t} min left for {self}' if t > 0 else f'Your {self} was destroyed')
+                pos_str = f' in position {self.Position}' if self.Position is not None else ''
+                say(f'{t} min left for {self}' if t > 0 else f'Your {self}{pos_str} was destroyed')
                 self.Warnings[t] = False
 
     @property
@@ -87,6 +89,9 @@ class Mine:
 
     def set_deposit(self, s):
         self.Deposit = s
+
+    def set_position(self, pos: int):
+        self.Position = pos
 
     def add_deposit(self, n):
         self.Deposit += n

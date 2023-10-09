@@ -59,11 +59,13 @@ class MineBox(GroupBox):
         mine.reset_warnings()
 
     def load_mines(self):
-        m = Mines(self.MineCls.__name__)
-        if not m.FileName.exists():
+        mines = Mines(self.MineCls.__name__)
+        if not mines.FileName.exists():
             for v in self.DefaultValues:
-                m + self.MineCls(*v)
-        return m
+                mines + self.MineCls(*v)
+        for i, mine in enumerate(mines):
+            mine.set_position(i)
+        return mines
 
     @property
     def range(self):

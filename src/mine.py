@@ -50,6 +50,10 @@ class Mine:
                 self.Deposit -= n_cycles * self.Level
         self.warn()
 
+    def reset_warnings(self):
+        for k in self.Warnings:
+            self.Warnings[k] = True
+
     def warn(self):
         t0 = self.time_left.total_seconds()
         for t, b in self.Warnings.items():
@@ -127,6 +131,10 @@ class Mines:
     def __iter__(self):
         return iter(self.L)
 
+    def insert(self, i: int, mine: Mine):
+        self.L.insert(i, mine)
+        self.save()
+
     @property
     def size(self):
         return len(self.L)
@@ -146,10 +154,10 @@ class Mines:
         self.save()
         self.L = self.load()
 
-    def reload_classes(self):
+    def reload_classes(self, *keys):
         for mine in self:
             for k, v in mine.__class__(0, 0).__dict__.items():
-                if k not in mine.__dict__:
+                if k not in mine.__dict__ or k in keys:
                     mine.__dict__[k] = v
             mine.__class__ = eval(mine.__class__.__name__)
 

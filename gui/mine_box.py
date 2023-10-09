@@ -37,9 +37,14 @@ class MineBox(GroupBox):
         for mine, row in zip(self.Mines, self.Labels):
             for lbl, txt in zip(row[1:], mine.data):
                 lbl[0].setText(str(txt))
+            self.format(mine)
 
     def load_default(self):
         MineBox.Config.set_section(str(self.MineCls.Resource))
+    def format(self, mine: Mine):
+        color, bold = ('white', True) if mine.time_left.total_seconds() < 0 else ('red', False)
+        for lbl in self.Labels[self.index(mine)]:
+            format_widget(lbl, color=color, bold=bold)
         t = MineBox.Config.get_value('extra time')
         d = MineBox.Config.get_value('deposit')
         d = ([int(d)] * len(t)) if type(d) is str else d

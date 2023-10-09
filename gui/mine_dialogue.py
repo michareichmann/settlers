@@ -72,7 +72,8 @@ class MineDialogue(QDialog):
         if self.SelectedMine is not None:
             self.add_mine2cfg()
             values, pos = self.values_pos
-            self.MineBoxes[0].insert_mine(pos, self.SelectedMine(*values))
+            i = MineClasses.index(self.SelectedMine)
+            self.MineBoxes[i].insert_mine(pos, self.SelectedMine(*values))
             self.done(QDialog.Accepted)
         else:
             warning('No mine was selected')

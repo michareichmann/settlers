@@ -19,15 +19,13 @@ class MineBox(GroupBox):
         self.MineCls = cls
         self.Title = f'{cls.Resource} Mines'
 
-        self.DefaultValues = self.load_default()
+        self.DefaultValues = self.load_default(cls)
         self.Mines = self.load_mines()
         super().__init__()
 
+        self.Speed = check_box()
         self.Layout = self.create_layout()
-        self.Speed: QCheckBox = check_box()
-        self.create_header()
-        self.create_labels()
-        self.create_buttons()
+        self.create_widgets()
 
     def __getitem__(self, item):
         return self.Mines[item]
@@ -39,23 +37,26 @@ class MineBox(GroupBox):
                 lbl[0].setText(str(txt))
             self.format(mine)
 
-    def load_default(self):
-        MineBox.Config.set_section(str(self.MineCls.Resource))
     def format(self, mine: Mine):
         color, bold = ('white', True) if mine.time_left.total_seconds() < 0 else ('red', False)
         for lbl in self.Labels[self.index(mine)]:
             format_widget(lbl, color=color, bold=bold)
+
+    @staticmethod
+    def load_default(cls: Mine):
+        MineBox.Config.set_section(str(cls.Resource))
         t = MineBox.Config.get_value('extra time')
         d = MineBox.Config.get_value('deposit')
         d = ([int(d)] * len(t)) if type(d) is str else d
         lvl = MineBox.Config.get_value('level', default=1)
         return [(i, j, lvl) for i, j in zip(d, t)]
 
-    def reload(self, mine: Mine):
+    def reset(self, mine: Mine):
         i = self.index(mine)
         mine.set_lvl(self.DefaultValues[i][2])
         mine.set_deposit(self.DefaultValues[i][0])
         mine.set_double_speed(self.Speed.isChecked())
+        mine.reset_warnings()
 
     def load_mines(self):
         m = Mines(self.MineCls.__name__)
@@ -95,11 +96,16 @@ class MineBox(GroupBox):
         self.layout().setContentsMargins(4, 4, 4, 4)
         return self.layout()  # noqa
 
+    def create_widgets(self):
+        self.create_header()
+        self.create_labels()
+        self.create_buttons()
+
     def create_header(self):
         for i, name in enumerate(MineBox.Header):
             self.Layout.addWidget(label(name, bold=True), 0, i, CEN)
         i = len(self.Header)
-        self.Layout.addWidget(label('double speed:'), 0, i, 1, 2, RIGHT)
+        self.Layout.addWidget(label('2x speed:'), 0, i, 1, 2, RIGHT)
         self.Layout.addWidget(self.Speed, 0, i + 2, LEFT)
 
     def create_labels(self):
@@ -116,9 +122,17 @@ class MineBox(GroupBox):
             self.Buttons.append([OnOffButton(mine.change_status, mine.Paused, self.FigPath.joinpath('on.png'), self.FigPath.joinpath('off.png'), align=CEN, xpos=pos[0]),
                                  PicButton(mine.upgrade, self.FigPath.joinpath('upgrade.png'), align=CEN, xpos=pos[1]),
                                  button('Set', partial(self.set_deposit, mine), size=40, align=CEN, xpos=pos[2]),
-                                 PicButton(partial(self.reload, mine), Dir.joinpath('figures', 'reload.png'), align=CEN, xpos=pos[3])])
+                                 PicButton(partial(self.reset, mine), Dir.joinpath('figures', 'reload.png'), align=CEN, xpos=pos[3])])
             for w in self.Buttons[-1]:
                 self.Layout.addWidget(w, i, w.XPos, w.Align)
+
+    def insert_mine(self, i: int, mine: Mine):
+        mine.set_double_speed(self.Speed.isChecked())
+        self.Mines.insert(i, mine)
+        self.DefaultValues = self.load_default(self.MineCls)
+        self.remove_widgets()
+        self.create_widgets()
+        self.adjust_height()
 
     # endregion
     # ----------------------------------

@@ -1,10 +1,15 @@
 from functools import partial
 
 from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QPainter, QIcon, QPixmap
+from PyQt5.QtGui import QPainter, QPixmap
+from PyQt5 import QtSvg
 from PyQt5.QtWidgets import QLabel, QLineEdit, QPushButton, QSpinBox, QComboBox, QCheckBox, QPlainTextEdit, QAbstractButton
 
 from plotting.utils import do, do_nothing, Path, choose
+from matplotlib.colors import cnames
+
+from xml.etree import ElementTree
+
 
 FontSize = 13
 ButtonHeight = 50
@@ -66,7 +71,7 @@ def button(txt, f=do_nothing, size=None, height=ButtonHeight, align=CEN, xpos=0)
     but = my_widget(QPushButton, align, xpos)
     but.setText(txt)
     do(but.setFixedWidth, size)
-    do(but.setMaximumHeight, height)
+    do(but.setFixedHeight, height)
     but.clicked.connect(f)  # noqa
     return but
 
@@ -86,8 +91,8 @@ def label(txt, color=None, bold=False, font=None, font_size=FontSize * 1.5, bg_c
     return lb
 
 
-def pix_map(p: Path):
-    return QIcon("filepath.svg").pixmap(QSize(100, 100)) if p.stem == 'svg' else QPixmap(str(p))
+def figure(p: Path):
+    return QtSvg.QSvgRenderer(str(p)) if p.suffix == '.svg' else QPixmap(str(p))
 
 
 def format_widget(widget, color=None, bold=None, font_size=None, font=None, bg_col=None):
@@ -100,30 +105,84 @@ def style_sheet(dic):
     return '; '.join(f'{k}: {v}' for k, v in dic.items() if v is not None)
 
 
-class PicButton(QAbstractButton):
-    def __init__(self, f, pic: Path, pic_hover: Path = None, pic_pressed: Path = None, fr=None, align: Qt.AlignmentFlag = CEN, xpos: int = 0, parent=None):
-        super(PicButton, self).__init__(parent)
-        self.PicName = pic.name
-        self.PixMap = pix_map(pic)
-        self.PixMapHover = pix_map(choose(pic_hover, pic.with_stem(f'{pic.stem}-hover')))
-        self.PixMapPressed = pix_map(choose(pic_pressed, pic.with_stem(f'{pic.stem}-pressed')))
+class MySvg:
 
+    def __init__(self, path: Path):
+        self.Path = path
+        self.Str = self.load()
+
+    def load(self):
+        with open(self.Path) as f:
+            return ''.join(f.readlines())
+
+    def set_fill_color(self, color: str):
+        s = self.Str.find('fill')
+        self.Str = self.Str.replace(self.Str[s:s + 14], f'fill="{color if color.startswith("#") else cnames[color]}"')
+
+    def render(self, painter: QPainter):
+        QtSvg.QSvgRenderer(bytes(self.Str, 'utf-8')).render(painter)
+
+
+class MyXML:
+    def __init__(self, path: Path):
+        self.Root = ElementTree.parse(path).getroot()
+        self.G = self.Root[-1]
+
+    def set_opacity(self, value: float):
+        self.G.set('style', f'opacity: {value:.1f}')
+
+    def render(self, painter: QPainter):
+        QtSvg.QSvgRenderer(ElementTree.tostring(self.Root)).render(painter)
+
+
+class MyAbstractButton(QAbstractButton):
+    def __init__(self, align: Qt.AlignmentFlag, xpos: int, parent=None):
+        super().__init__(parent)
         self.Align = align
         self.XPos = xpos
+
+    def __repr__(self):
+        return self.__class__.__name__
+
+    def __getitem__(self, item):
+        return [self, self.Align, self.XPos][item]
+
+
+class SvgButton(MyAbstractButton):
+    def __init__(self, f, pic: Path, fr=None, align: Qt.AlignmentFlag = CEN, xpos: int = 0, parent=None):
+        super(SvgButton, self).__init__(align, xpos, parent)
+        self.PicName = pic.name
+        self.Pic = MySvg(pic)
 
         self.pressed.connect(f)  # noqa
         self.released.connect(self.update if fr is None else fr)  # noqa
 
-    def __getitem__(self, item):
-        return [self, self.Align, self.XPos][item]
+    def paintEvent(self, event):
+        self.Pic.set_fill_color('black' if self.isDown() else 'white' if self.underMouse() else 'red')
+        painter = QPainter(self)
+        self.Pic.render(painter)
+        painter.end()
+
+    def sizeHint(self):
+        return QSize(14, 14)
+
+
+class PicButton(MyAbstractButton):
+    def __init__(self, f, pic: Path, pic_hover: Path = None, pic_pressed: Path = None, fr=None, align: Qt.AlignmentFlag = CEN, xpos: int = 0, parent=None):
+        super(PicButton, self).__init__(align, xpos, parent)
+        self.PicName = pic.name
+        self.PixMap = figure(pic)
+        self.PixMapHover = figure(choose(pic_hover, pic.with_stem(f'{pic.stem}-hover')))
+        self.PixMapPressed = figure(choose(pic_pressed, pic.with_stem(f'{pic.stem}-pressed')))
+
+        self.pressed.connect(f)  # noqa
+        self.released.connect(self.update if fr is None else fr)  # noqa
 
     def paint(self, p: QPainter):
         pass
 
     def paintEvent(self, event):
-        pix = self.PixMapHover if self.underMouse() else self.PixMap
-        if self.isDown():
-            pix = self.PixMapPressed
+        pix = [self.PixMapHover, self.PixMapPressed, self.PixMap][1 if self.isDown() else 0 if self.underMouse() else 2]
 
         painter = QPainter(self)
         self.paint(painter)
@@ -144,8 +203,8 @@ class OnOffButton(QAbstractButton):
         super(OnOffButton, self).__init__(parent)
 
         self.Opacity = opacity
-        self.PixMapOn = pix_map(pic_on)
-        self.PixMapOff = pix_map(pic_off)
+        self.PicOn = MyXML(pic_on)
+        self.PicOff = MyXML(pic_off)
 
         self.Align = align
         self.XPos = xpos
@@ -161,19 +220,12 @@ class OnOffButton(QAbstractButton):
         self.Clicked = not self.Clicked
         f()
 
-    def paint(self, p: QPainter):
-        if self.underMouse() and not self.isDown():
-            p.setOpacity(self.Opacity)
-
     def paintEvent(self, event):
-        pix = self.PixMapOn if self.Clicked else self.PixMapOff
-
+        pix = self.PicOn if self.Clicked else self.PicOff
+        pix.set_opacity(self.Opacity if self.underMouse() else 1)
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
-        painter.setRenderHint(QPainter.LosslessImageRendering, True)
-        self.paint(painter)
-        painter.drawPixmap(event.rect(), pix, pix.rect())
+        pix.render(painter)
+        painter.end()
 
     def enterEvent(self, event):
         self.update()
@@ -182,7 +234,7 @@ class OnOffButton(QAbstractButton):
         self.update()
 
     def sizeHint(self):
-        return QSize(47, 22)
+        return QSize(42, 16)
 
 
 class PicButOpacity(PicButton):

@@ -13,6 +13,7 @@ class MineBox(GroupBox):
     Header = ['P', 'Lvl', 'N', 'Time Left', 'Status']
     Status = ['ON', 'OFF']
     FigPath = Dir.joinpath('figures')
+    Height = 22
 
     def __init__(self, cls):
 
@@ -72,7 +73,7 @@ class MineBox(GroupBox):
         return range(self.Mines.size)
 
     def adjust_height(self):
-        self.setFixedHeight(self.Height * (self.Mines.size + 1))
+        self.setFixedHeight(self.Height * (self.Mines.size + 2))
 
     def configure(self):
         super().configure()
@@ -121,10 +122,10 @@ class MineBox(GroupBox):
     def create_buttons(self):
         pos = range(4, 8)
         for i, mine in enumerate(self.Mines, 1):
-            self.Buttons.append([OnOffButton(mine.change_status, mine.Paused, self.FigPath.joinpath('on.png'), self.FigPath.joinpath('off.png'), align=CEN, xpos=pos[0]),
-                                 PicButton(mine.upgrade, self.FigPath.joinpath('upgrade.png'), align=CEN, xpos=pos[1]),
-                                 button('Set', partial(self.set_deposit, mine), size=40, align=CEN, xpos=pos[2]),
-                                 PicButton(partial(self.reset, mine), Dir.joinpath('figures', 'reload.png'), align=CEN, xpos=pos[3])])
+            self.Buttons.append([OnOffButton(mine.change_status, mine.Paused, self.FigPath.joinpath('on.svg'), self.FigPath.joinpath('off.svg'), align=CEN, xpos=pos[0]),
+                                 SvgButton(mine.upgrade, self.FigPath.joinpath('upgrade.svg'), xpos=pos[1]),
+                                 button('Set', partial(self.set_deposit, mine), size=40, height=16, align=CEN, xpos=pos[2]),
+                                 SvgButton(partial(self.reset, mine), Dir.joinpath('figures', 'reload.svg'), xpos=pos[3])])
             for w in self.Buttons[-1]:
                 self.Layout.addWidget(w, i, w.XPos, w.Align)
 

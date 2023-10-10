@@ -8,7 +8,7 @@
 import sys
 
 from PyQt5.QtCore import QTimer
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtWidgets import QMainWindow, QAction, QFontDialog, QWidget, QVBoxLayout, QHBoxLayout
 
 from gui.mine_box import MineBox
@@ -71,6 +71,7 @@ class Gui(QMainWindow):
     def update(self):
         for box in self.MineBoxes:
             box.update()
+            box.Mines.save()
 
     def configure(self):
         self.setGeometry(1000, 500, Gui.Width, Gui.Height)

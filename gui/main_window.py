@@ -9,7 +9,7 @@ import sys
 
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QMainWindow, QAction, QFontDialog, QWidget, QVBoxLayout
+from PyQt5.QtWidgets import QMainWindow, QAction, QFontDialog, QWidget, QVBoxLayout, QHBoxLayout
 
 from gui.mine_box import MineBox
 from gui.mine_dialogue import MineDialogue
@@ -118,3 +118,41 @@ class MenuBar(object):
     def close_app():
         info('Closing application')
         sys.exit(2)
+
+
+class TestGui(QMainWindow):
+
+    Width = 500
+    Height = 200
+    BUTTON_HEIGHT = 50
+    Version = 0.0
+    Title = f'TEST'
+    T_UPDATE = 500
+
+    def __init__(self):
+        super(TestGui, self).__init__()
+
+        self.Layout = self.create_layout()
+
+        self.adjustSize()
+
+        self.Timer = self.create_timer()
+        self.show()
+
+    def create_layout(self) -> QHBoxLayout:
+        self.configure()
+        layout = QHBoxLayout()
+        self.setCentralWidget(QWidget())
+        self.centralWidget().setLayout(layout)
+        return layout  # noqa
+
+    def create_timer(self) -> QTimer:
+        t = QTimer()
+        t.timeout.connect(self.update)  # noqa
+        t.start(Gui.T_UPDATE)
+        return t
+
+    def configure(self):
+        self.setGeometry(1000, 500, Gui.Width, Gui.Height)
+        self.setWindowTitle(Gui.Title)
+        self.setWindowIcon(QIcon(str(Dir.joinpath('figures', 'favicon.ico'))))

@@ -9,6 +9,7 @@ from plotting.utils import do, do_nothing, Path, choose
 from matplotlib.colors import cnames
 
 from xml.etree import ElementTree
+from copy import deepcopy
 
 
 FontSize = 13
@@ -227,8 +228,11 @@ class OnOffButton(QAbstractButton):
         f()
 
     def paintEvent(self, event):
-        pix = self.PicOn if self.Clicked else self.PicOff
-        pix.set_opacity(self.Opacity if self.underMouse() else 1)
+        pix = deepcopy(self.PicOn if self.Clicked else self.PicOff)
+        if self.underMouse():
+            pix.set_style_attr(3, 'fill', cnames['darkred' if self.Clicked else 'green'])
+            pix.set_style_attr(4, 'fill', cnames['darkred' if self.Clicked else 'green'])
+            pix.set_style_attr(5, 'fill', cnames['red' if self.Clicked else 'limegreen'])
         painter = QPainter(self)
         pix.render(painter)
         painter.end()
@@ -264,3 +268,8 @@ class PicButOpacity(PicButton):
 
     def sizeHint(self):
         return QSize(40, 40)
+
+
+if __name__ == '__main__':
+
+    a = MyXML(Path('figures/on.svg'))

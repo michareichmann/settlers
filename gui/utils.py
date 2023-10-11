@@ -127,9 +127,15 @@ class MyXML:
     def __init__(self, path: Path):
         self.Root = ElementTree.parse(path).getroot()
         self.G = self.Root[-1]
+        self.Paths = self.G[0]
 
     def set_opacity(self, value: float):
         self.G.set('style', f'opacity: {value:.1f}')
+
+    def set_style_attr(self, path_id, key: str, value):
+        old_style = self.Paths[path_id].get('style')
+        old_str = old_style[old_style.find(f'{key}:'): len(key) + 8]
+        self.Paths[path_id].set('style', old_style.replace(old_str, f'{key}:{value}'))
 
     def render(self, painter: QPainter):
         QtSvg.QSvgRenderer(ElementTree.tostring(self.Root)).render(painter)

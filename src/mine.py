@@ -61,7 +61,7 @@ class Mine:
         for t, b in self.Warnings.items():
             if (t - 5) * 60 < t0 < t * 60 and b:
                 pos_str = f' in position {self.Position}' if self.Position is not None else ''
-                say(f'{t} min left for {self}' if t > 0 else f'Your {self}{pos_str} was destroyed')
+                say(f'{t} min left for {self}{pos_str}' if t > 0 else f'Your {self}{pos_str} was destroyed')
                 self.Warnings[t] = False
 
     @property

@@ -24,6 +24,7 @@ class Mine:
         self.ExtraTime = duration(extra_time)
         self._ProdTime = self.Resource.ProdTime
         self.Speed = speed
+        self.DoubleSpeed = False
         self.ProdTime = self._ProdTime / speed + self.ExtraTime
         self.Level = int(lvl)
         self.Paused = bool(paused)
@@ -85,6 +86,7 @@ class Mine:
         self.set_lvl(self.Level + 1)
 
     def set_double_speed(self, status: bool):
+        self.DoubleSpeed = status
         self.ProdTime = self._ProdTime / (self.Speed * [1, 2][status]) + self.ExtraTime
 
     def set_deposit(self, s):
@@ -111,7 +113,7 @@ class Mine:
 
     @property
     def data(self):
-        return [self.Level, self.Deposit, self.time_left_str]
+        return [f'{self.Level}{"S" if self.DoubleSpeed else ""}', self.Deposit, self.time_left_str]
 
 
 class Mines:

@@ -13,13 +13,16 @@ class Battalion:
         self.N = n
         self.Unit = unit
         self.Units = [deepcopy(unit) for _ in range(n)]
-        self.HP = np.sum([unit.HP for unit in self])
+        self.HP = self.N * self.Unit.HP
+        self.P, self.Q = self.Unit.Accuracy, 1 - self.Unit.Accuracy
 
-        self.NAttacks = 0
+        self.NAttacks: int | np.ndarray = 0
         self.NDefeated = 0
+        self.NAlive: int | np.ndarray = self.N
+        self.ExcessDmg = 0
 
     def __repr__(self):
-        return f'{self.Unit.Name} Batallion ({self.alive_str})\n'
+        return f'{self.Unit.Name} Batallion ({self.N})'
 
     def __getitem__(self, item):
         return self.Units[item]
@@ -34,19 +37,23 @@ class Battalion:
 
     @property
     def can_attack(self):
-        return self.n_can_attack > 0
+        return np.any(self.n_can_attack > 0)
 
     @property
     def n_can_attack(self):
-        return self.N - self.NDefeated - self.NAttacks
+        return self.NAlive - self.NAttacks
 
     @property
-    def dead(self):
+    def defeated(self):
+        return np.all(self.NDefeated == self.N)
+
+    @property
+    def defeated_(self):
         return self.Units[-1].Dead
 
     @property
     def alive(self):
-        return not self.dead
+        return not self.defeated
 
     @property
     def next(self):
@@ -63,6 +70,9 @@ class Battalion:
         for unit in self.Units:
             unit.revive()
         self.reset()
+
+    def reset_attacks(self):
+        self.NAttacks[...] = 0
 
     def reset(self):
         self.NAttacks = 0

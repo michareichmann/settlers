@@ -29,10 +29,14 @@ class Army:
         self.NUnits = self.init_n_units()  # total number of units
         self.IHP = self.hp_indices()  # indices sorted by HP
 
+        self.ExcessDmg = 0
         self.NRounds = 0
 
     def __getitem__(self, item):
         return self.Batallions[item]
+
+    def __iter__(self):
+        return iter(self.Batallions)
 
     def __add__(self, other):
         return self.add(other)
@@ -78,7 +82,11 @@ class Army:
 
     @property
     def defeated(self):
-        return np.all([bat.dead for bat in self])
+        return np.all([bat.defeated for bat in self])
+
+    @property
+    def defeated_(self):
+        return np.all([bat.defeated_ for bat in self])
 
     def revive(self):
         for bat in self:
@@ -95,7 +103,7 @@ class Army:
     def _attack(self, army: 'Army', speed, prnt=False):
         for bat in self.speed_batallions(speed):
             indices = iter(army.indices(bat.Unit.Flanking))
-            while bat.can_attack and not army.defeated:
+            while bat.can_attack and not army.defeated_:
                 (bat.print_attack if prnt else bat._attack)(army[next(indices)])
             bat.NAttacks = 0
 

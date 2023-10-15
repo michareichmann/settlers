@@ -16,6 +16,7 @@ def now():
 class Mine:
 
     Resource: Resource = None
+    WarnTimes = [30, 0]
 
     def __init__(self, dep_size: int, extra_time, lvl=1, speed=1, paused=False):
 
@@ -32,7 +33,7 @@ class Mine:
 
         self.LastProduced = now()
 
-        self.Warnings = {t: True for t in [30, 0]}
+        self.Warnings = {t: True for t in self.WarnTimes}
 
     def __str__(self):
         return f'{self.Resource} mine'
@@ -188,11 +189,13 @@ class Mines:
 
 class CopperMine(Mine):
     Resource = CopperOre
+    WarnTimes = [0]
 
 
 class CoalMine(Mine):
 
     Resource = Coal
+    WarnTimes = [150, 0]
 
     def __init__(self, dep_size, extra_time, lvl=1, speed=1, paused=False):
         super().__init__(dep_size, extra_time, lvl, speed * 2, paused)
@@ -200,10 +203,12 @@ class CoalMine(Mine):
 
 class IronMine(Mine):
     Resource = IronOre
+    WarnTimes = [55, 0]
 
 
 class GoldMine(Mine):
     Resource = GoldOre
+    WarnTimes = [220, 0]
 
 
 MineClasses = [CopperMine, IronMine, CoalMine, GoldMine]

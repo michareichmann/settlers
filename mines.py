@@ -22,11 +22,11 @@ if __name__ == '__main__':
 
         signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-        app = QApplication([Gui.Title])
+        app = QApplication([MineGui.Title])
         app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
         filterwarnings('ignore')
 
-        g = Gui()
+        g = MineGui()
 
         sys.exit(app.exec_())
 

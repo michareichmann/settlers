@@ -18,17 +18,17 @@ from src.mine import *
 from utils.helpers import Dir, info
 
 
-class Gui(QMainWindow):
+class MineGui(QMainWindow):
 
     Width = 500
     Height = 200
     BUTTON_HEIGHT = 50
-    Version = 0.0
-    Title = f'Settlers Online Gui V{Version}'
+    Version = 1.0
+    Title = f'Settlers Online - Mines V{Version}'
     T_UPDATE = 500
 
     def __init__(self):
-        super(Gui, self).__init__()
+        super(MineGui, self).__init__()
 
         self.Layout = self.create_layout()
 
@@ -60,7 +60,7 @@ class Gui(QMainWindow):
     def create_timer(self) -> QTimer:
         t = QTimer()
         t.timeout.connect(self.update)  # noqa
-        t.start(Gui.T_UPDATE)
+        t.start(MineGui.T_UPDATE)
         return t
 
     def closeEvent(self, event):
@@ -74,14 +74,14 @@ class Gui(QMainWindow):
             box.Mines.save()
 
     def configure(self):
-        self.setGeometry(1000, 500, Gui.Width, Gui.Height)
-        self.setWindowTitle(Gui.Title)
+        self.setGeometry(1000, 500, MineGui.Width, MineGui.Height)
+        self.setWindowTitle(MineGui.Title)
         self.setWindowIcon(QIcon(str(Dir.joinpath('figures', 'favicon.ico'))))
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
 
 class MenuBar(object):
-    def __init__(self, gui: Gui, display=False):
+    def __init__(self, gui: MineGui, display=False):
         self.Window = gui
         self.Menus = {}
         self.Display = display
@@ -150,10 +150,10 @@ class TestGui(QMainWindow):
     def create_timer(self) -> QTimer:
         t = QTimer()
         t.timeout.connect(self.update)  # noqa
-        t.start(Gui.T_UPDATE)
+        t.start(MineGui.T_UPDATE)
         return t
 
     def configure(self):
-        self.setGeometry(1000, 500, Gui.Width, Gui.Height)
-        self.setWindowTitle(Gui.Title)
+        self.setGeometry(1000, 500, MineGui.Width, MineGui.Height)
+        self.setWindowTitle(MineGui.Title)
         self.setWindowIcon(QIcon(str(Dir.joinpath('figures', 'favicon.ico'))))

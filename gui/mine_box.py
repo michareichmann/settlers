@@ -33,6 +33,7 @@ class MineBox(GroupBox):
 
     def update(self):
         self.Mines.update()
+        self.setTitle(f'{self.Title}  ({self.Mines.current_production}*/hr)')
         for mine, row in zip(self.Mines, self.Labels):
             for lbl, txt in zip(row[1:], mine.data):
                 lbl[0].setText(str(txt))

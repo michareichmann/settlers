@@ -147,6 +147,11 @@ class Mines:
     def size(self):
         return len(self.L)
 
+    @property
+    def current_production(self):
+        prod = sum(timedelta(hours=1) / mine.ProdTime for mine in self)
+        return int(np.round(prod * 2))  # buffed
+
     def load(self) -> List:
         return load_pickle(self.FileName) if self.FileName.exists() else []
 
@@ -216,5 +221,3 @@ MineClasses = [CopperMine, IronMine, CoalMine, GoldMine]
 
 def mine_from_str(s, dep_size, extra_time, lvl=1, speed=1, paused=False):
     return next(cls(dep_size, extra_time, lvl, speed, paused) for cls in MineClasses if s.split('-')[0].lower() in cls.__name__.lower())
-
-

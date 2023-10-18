@@ -66,6 +66,14 @@ class Mine:
                 self.Warnings[t] = False
 
     @property
+    def hourly_production(self):
+        return timedelta(hours=1) / self.ProdTime * self.Level if not self.destroyed and not self.Paused else 0
+
+    @property
+    def destroyed(self):
+        return self.Deposit <= 0
+
+    @property
     def time_left(self):
         time_till_next_production = timedelta(0) if self.Paused else self.ProdTime - (now() - self.LastProduced)
         return np.ceil(self.Deposit / self.Level) * self.ProdTime + time_till_next_production
@@ -149,7 +157,7 @@ class Mines:
 
     @property
     def current_production(self):
-        prod = sum(timedelta(hours=1) / mine.ProdTime for mine in self)
+        prod = sum(mine.hourly_production for mine in self)
         return int(np.round(prod * 2))  # buffed
 
     def load(self) -> List:

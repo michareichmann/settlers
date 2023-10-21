@@ -59,6 +59,7 @@ class MineBox(GroupBox):
         mine.set_deposit(self.DefaultValues[i][0])
         mine.set_double_speed(self.Speed.isChecked())
         mine.reset_warnings()
+        self.Speed.setChecked(False)
 
     def load_mines(self):
         mines = Mines(self.MineCls.__name__)
@@ -92,6 +93,7 @@ class MineBox(GroupBox):
         if ok and value:
             mine.set_deposit(value)
             mine.set_double_speed(self.Speed.isChecked())
+            self.Speed.setChecked(False)
 
     # ----------------------------------
     # region LAYOUT & WIDGETS

@@ -40,7 +40,7 @@ class MineBox(GroupBox):
             self.format(mine)
 
     def format(self, mine: Mine):
-        color, bold = ('white', True) if mine.time_left.total_seconds() < 0 else ('red', False)
+        color, bold = ('white', True) if mine.destroyed else ('red', False)
         for lbl in self.Labels[self.index(mine)]:
             format_widget(lbl, color=color, bold=bold)
 

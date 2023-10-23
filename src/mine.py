@@ -59,11 +59,13 @@ class Mine:
         self.Warnings = sorted(self.WarnTimes, reverse=True)
 
     def warn(self):
+        if not self.Warnings:
+            return
         t0, t = self.time_left.total_seconds(), self.Warnings[0]
-        if t < t0 or self.Deposit <= 0:
-            if (t - 5) * 60 < t0:  # only warn if the even occurred recently
+        if t0 < t * 60 or self.Deposit <= 0:
+            if (t - 5) * 60 < t0:  # only warn if the event occurred recently
                 pos_str = '' if self.Position is None else f' in position {self.Position + 1}'
-                say(f'{t} min left for {self}{pos_str}' if t > 0 and self.Deposit > 0 else f'Your {self}{pos_str} was destroyed')
+                say(f'{t} minutes left for {self}{pos_str}' if t > 0 and self.Deposit > 0 else f'Your {self}{pos_str} was destroyed')
             self.Warnings.remove(t)
     # endregion
     # ----------------------------------------

@@ -33,7 +33,7 @@ class Mine:
 
         self.LastProduced = now()
 
-        self.Warnings = {t: True for t in self.WarnTimes}
+        self.Warnings = sorted(self.WarnTimes, reverse=True)
 
     def __str__(self):
         return f'{self.Resource} mine'
@@ -53,17 +53,20 @@ class Mine:
                 self.Deposit -= n_cycles * self.Level
         self.warn()
 
+    # ----------------------------------------
+    # region WARNINGS
     def reset_warnings(self):
-        for k in self.Warnings:
-            self.Warnings[k] = True
+        self.Warnings = sorted(self.WarnTimes, reverse=True)
 
     def warn(self):
-        t0 = self.time_left.total_seconds()
-        for t, b in self.Warnings.items():
-            if ((t - 5) * 60 < t0 < t * 60 or self.Deposit <= 0) and b:
-                pos_str = f' in position {self.Position}' if self.Position is not None else ''
+        t0, t = self.time_left.total_seconds(), self.Warnings[0]
+        if t < t0 or self.Deposit <= 0:
+            if (t - 5) * 60 < t0:  # only warn if the even occurred recently
+                pos_str = '' if self.Position is None else f' in position {self.Position + 1}'
                 say(f'{t} min left for {self}{pos_str}' if t > 0 and self.Deposit > 0 else f'Your {self}{pos_str} was destroyed')
-                self.Warnings[t] = False
+            self.Warnings.remove(t)
+    # endregion
+    # ----------------------------------------
 
     @property
     def hourly_production(self):
@@ -229,3 +232,8 @@ MineClasses = [CopperMine, IronMine, CoalMine, GoldMine]
 
 def mine_from_str(s, dep_size, extra_time, lvl=1, speed=1, paused=False):
     return next(cls(dep_size, extra_time, lvl, speed, paused) for cls in MineClasses if s.split('-')[0].lower() in cls.__name__.lower())
+
+
+if __name__ == '__main__':
+
+    a = CopperMine(500, 20, 2)
